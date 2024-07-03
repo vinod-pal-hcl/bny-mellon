@@ -1,0 +1,48 @@
+{
+    "maxissues": 1000,
+    "issuestates": "New,Open,InProgress,Reopened",
+    "issueseverities": "Critical,High,Medium",
+    "imurl": "<Jira URL>",
+    "imUserName": "<username>",
+    "imPassword": "<encrypted password or accesstoken. To encrypt the password run the command "node .\cryptoService.js --encrypt <password>" from the base directory.>",
+    "imissuetype": "<issue type like task, bug, epic, etc.>",
+    "imsummary": "Security issue: %IssueType% found by %Scanner%",
+    "severitymap": {
+        "High": "<value of priority attribute in Jira. Ex: High, Low>",
+        "Medium": "<value of priority attribute in Jira>",
+        "Low": "<value of priority attribute in Jira>",
+        "Information": "<value of priority attribute in Jira>"
+    },
+    "attributeMappings": [
+        {
+            "imAttr": "labels",
+            "appScanAttr": "Application Name",
+            "type": "Array"
+        },
+        {
+            "imAttr": "customfield_11292",
+            "appScanAttr": "Application Name",
+            "type": "Array"
+        },
+        {
+            "imAttr": "customfield_13096",
+            "appScanAttr": "App Scan Bug testing Status",
+            "type": "Array"
+        },
+        {
+            "imAttr": "customfield_13094",
+            "appScanAttr": "App Scan Severity",
+            "type": "Array"
+        },
+        {
+            "imAttr": "customfield_13093",
+            "appScanAttr": "Source Code Language", 
+            "type": "Array"
+        },
+        {
+            "imAttr": "customfield_13095",
+            "appScanAttr": "App Scan Issue Source",
+            "type": "Array"
+        }
+    ]
+}
