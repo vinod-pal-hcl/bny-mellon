@@ -396,4 +396,7 @@ router.get('/sync/startImSync/:syncinterval', tokenValidation.validateToken, sch
 router.get('/sync/stopImSync', tokenValidation.validateToken, igwController.stopProviderSync);
 
 router.get('/sync/labels', tokenValidation.validateToken, igwController.labelsSync)
+
+router.post('/webhooks', igwController.webhooks)
+
 module.exports = router;

@@ -51,7 +51,7 @@ methods.updateIssuesOfApplication = async (appId, issueId, status, comment, exte
         let data = {
             "lastUpdated" : Date.now(),
             "appReleaseId": appId,
-            "attributeCollection" : { "attributeArray" : [ { "name": 'Status', "value": [status] }, { "name": 'Comments', "value": ["Fixed on Jira"] } ]}
+            "attributeCollection" : { "attributeArray" : [ { "name": 'Status', "value": [status] }, { "name": 'Comments', "value": [`${comment}`] } ]}
         }
         return await util.httpCall("PUT", token, url, JSON.stringify(data), etag);
     }catch(err){

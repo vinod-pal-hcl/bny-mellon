@@ -844,6 +844,44 @@ methods.labelsSync = async (req, res) => {
     }
 }
 
+methods.webhooks = async (req, res) => {
+    try {
+        const body = req.body;
+        if(body.issue_event_type_name == 'issue_generic' && body.webhookEvent == 'jira:issue_updated'){
+            let changelog = req.body.changelog;
+            if(changelog.items[0].field == 'status'){
+            if(changelog.items[0].toString == 'Closed'){
+                let status = 'Fixed';
+                let externalId = '';
+                let comment = 'Issue Status has been updated on Jira to Fixed';
+                let objData = JSON.parse(body.issue.fields.description)
+                let issueId = objData.id;
+                let applicationId = objData.ApplicationId;
+                let token = '';
+
+                await updateIssuesOfApplication(issueId, applicationId, status, comment, externalId, token);
+                logger.info(`Issue with ID ${issueId} for Application Id ${applicationId} is now marked as Fixed`);
+            }else if(changelog.items[0].toString == 'FALSE POSITIVE REVIEW' || changelog.items[0].toString == 'RETEST REQUESTED'){
+                let status = 'Noise';
+                let externalId = '';
+                let comment = 'Issue Status has been updated on Jira to Noise';
+                let objData = JSON.parse(body.issue.fields.description)
+                let issueId = objData.id;
+                let applicationId = objData.ApplicationId;
+                let token = '';
+
+                await updateIssuesOfApplication(issueId, applicationId, status, comment, externalId, token);
+                logger.info(`Issue with ID ${issueId} for Application Id ${applicationId} is now marked as Noise`);
+            }
+            }
+        }
+        res.status(200).send("Received");
+    } catch (error) {
+        logger.error(`Unable to Update Status in Appscan - ${error}`);
+        return res.status(400);    
+    }
+}
+
 const fetchAllData = async (serviceName, appscanToken, status, value) => {
     let skipValue = 0;
     let result = {};
