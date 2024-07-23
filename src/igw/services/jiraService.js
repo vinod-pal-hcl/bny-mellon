@@ -147,44 +147,53 @@ createPayload = async (issue, imConfigObject, applicationId, applicationName) =>
         if(process.env.APPSCAN_PROVIDER == "ASOC"){
             attrMap["summary"] = applicationName + " - " + issue["IssueType"] + " found by AppScan";
         }else{
-            attrMap["summary"] = "Security issue: "+ issue["Issue Type"].replaceAll("&#40;", "(").replaceAll("&#41;", ")") + " found by AppScan";
+            attrMap["summary"] = issue["Issue Type"].replaceAll("&#40;", "(").replaceAll("&#41;", ")");
         }
         
 
         attrMap["description"] = JSON.stringify(issue, null, 4);
         const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
         
-        let labelName = applicationName.trim();
+        let labelName = issue["Application Name"] != null || issue["Application Name"] != undefined ? issue["Application Name"].trim() || '' : '';
         let labelLanguage = issue?.Language != null || issue?.Language != undefined ? issue?.Language.trim() || '' : '';
         let labelSource = issue?.Source != null || issue?.Source != undefined ? issue?.Source.trim() || '' : '';
         let labelSeverity = issue?.Severity != null || issue?.Severity != undefined ? issue?.Severity.trim() || '' : '';
         let labelStatus = issue?.Status != null || issue?.Status != undefined ? issue?.Status.trim() || '' : '';
-
+        let labelID = issue?.id != null || issue?.id != undefined ? issue?.id.trim() || '' : '';
+        let labelLocation = issue?.Location != null || issue?.Location != undefined ? issue?.Location.trim() || '' : '';
+        let labelCreatedDate = issue["Date Created"] != null || issue["Date Created"] != undefined ? issue["Date Created"].trim() || '' : '';
         labelName = labelName.split(/\s+/).join('_');
         labelLanguage = labelLanguage.split(/\s+/).join('_');
         labelSource = labelSource.split(/\s+/).join('_');
         labelSeverity = labelSeverity.split(/\s+/).join('_');
         labelStatus = labelStatus.split(/\s+/).join('_');
+        labelID = labelID.split(/\s+/).join('_');
+        labelLocation = labelLocation.split(/\s+/).join('_');
+        labelCreatedDate = labelCreatedDate.split(/\s+/).join(' ');
 
         for(var i=0; i<attributeMappings.length; i++) {
-            if(attributeMappings[i].type === 'Array'){
+           
                 if(attributeMappings[i].imAttr == 'labels'){
                 attrMap[attributeMappings[i].imAttr] = [labelName || '', String(applicationId)];
-                }else if(attributeMappings[i].imAttr == 'customfield_11292'){
-                    attrMap[attributeMappings[i].imAttr] = `${labelName}`
-                }else if(attributeMappings[i].imAttr == 'customfield_13096'){
-                    attrMap[attributeMappings[i].imAttr] = `${labelStatus}`;
-                }else if(attributeMappings[i].imAttr == 'customfield_13094'){
-                    attrMap[attributeMappings[i].imAttr] = `${labelSeverity}`;
-                }else if(attributeMappings[i].imAttr == 'customfield_13093'){
-                    attrMap[attributeMappings[i].imAttr] = `${labelLanguage}`;
-                }else if(attributeMappings[i].imAttr == 'customfield_13095'){
-                    attrMap[attributeMappings[i].imAttr] = `${labelSource}`;
+                }else if(attributeMappings[i].imAttr == 'customfield_10114'){
+                    attrMap[attributeMappings[i].imAttr] = String(labelName);
+                }else if(attributeMappings[i].imAttr == 'customfield_10115'){
+                    attrMap[attributeMappings[i].imAttr] = "ASE-Self Scan";
+                }else if(attributeMappings[i].imAttr == 'customfield_10116'){
+                    attrMap[attributeMappings[i].imAttr] = String(issue["Issue Type"]);
+                }else if(attributeMappings[i].imAttr == 'customfield_10117'){
+                    attrMap[attributeMappings[i].imAttr] = String(labelSeverity);
+                }else if(attributeMappings[i].imAttr == 'customfield_10118'){
+                    attrMap[attributeMappings[i].imAttr] = String(labelID);
+                }else if(attributeMappings[i].imAttr == 'customfield_10119'){
+                    attrMap[attributeMappings[i].imAttr] = String(labelLocation);
+                }else if(attributeMappings[i].imAttr == 'customfield_10120'){
+                    attrMap[attributeMappings[i].imAttr] = "AppScan Enterprise";
+                }else if(attributeMappings[i].imAttr == 'customfield_10121'){
+                    attrMap[attributeMappings[i].imAttr] = String(labelCreatedDate);
                 }
-            }
-            else{
-                attrMap[attributeMappings[i].imAttr] = [labelName || '', applicationId];    
-            }
+
+                
         }
         payload["fields"] = attrMap;
         return payload;

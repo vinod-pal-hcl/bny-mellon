@@ -13,36 +13,52 @@
         "Low": "<value of priority attribute in Jira>",
         "Information": "<value of priority attribute in Jira>"
     },
-    "attributeMappings": [
+     "attributeMappings": [
         {
             "imAttr": "labels",
             "appScanAttr": "Application Name",
             "type": "Array"
         },
         {
-            "imAttr": "customfield_11292",
+            "imAttr": "customfield_10114",
             "appScanAttr": "Application Name",
-            "type": "Array"
+            "type": "string"
         },
         {
-            "imAttr": "customfield_13096",
-            "appScanAttr": "App Scan Bug testing Status",
-            "type": "Array"
+            "imAttr": "customfield_10115",
+            "appScanAttr": "Scan Type",
+            "type": "string"
         },
         {
-            "imAttr": "customfield_13094",
-            "appScanAttr": "App Scan Severity",
-            "type": "Array"
+            "imAttr": "customfield_10116",
+            "appScanAttr": "Category Name",
+            "type": "string"
         },
         {
-            "imAttr": "customfield_13093",
-            "appScanAttr": "Source Code Language", 
-            "type": "Array"
+            "imAttr": "customfield_10117",
+            "appScanAttr": "Finding Severity",
+            "type": "string"
         },
         {
-            "imAttr": "customfield_13095",
-            "appScanAttr": "App Scan Issue Source",
-            "type": "Array"
+            "imAttr": "customfield_10118",
+            "appScanAttr": "Scan Tool Finding Id",
+            "type": "string"
+        },
+        {
+            "imAttr": "customfield_10119",
+            "appScanAttr": "Finding location",
+            "type": "string"
+        },
+        {
+            "imAttr": "customfield_10120",
+            "appScanAttr": "Scanning Tool",
+            "type": "string"
+        },
+        {
+            "imAttr": "customfield_10121",
+            "appScanAttr": "Detection Date",
+            "type": "string"
         }
+        
     ]
 }
