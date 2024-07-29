@@ -2,13 +2,13 @@
 
 ## Prerequisites:
 
-1.  A Node JS runtime of version 16.16.0  
+1.  A Node JS runtime of version 18.18.0  
 2.  HCL Appscan Enterprise installation v10.x  
 3.  A supported Issue Management system: Jira  
 
 ## Installation steps
 
-1.  Install the Node JS runtime of version 16.16.0 (https://nodejs.org/en/)
+1.  Install the Node JS runtime of version 18.18.0 (https://nodejs.org/en/)
 2.  Download the binaries from the repository.
 3.  Open the command prompt from the home directory and run the command "npm install". This installs all the required npm libraries.
 4.  Edit the file '.env' (rename .env.temp to .env) from home directory to make changes to the below properties.  
