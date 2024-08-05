@@ -20,7 +20,7 @@
             "type": "Array"
         },
         {
-            "imAttr": "customfield_10114",
+            "imAttr": "customfield_10419",
             "appScanAttr": "Application Name",
             "type": "string"
         },
@@ -30,33 +30,38 @@
             "type": "string"
         },
         {
-            "imAttr": "customfield_10116",
+            "imAttr": "customfield_10415",
             "appScanAttr": "Category Name",
             "type": "string"
         },
         {
-            "imAttr": "customfield_10117",
-            "appScanAttr": "Finding Severity",
-            "type": "string"
-        },
-        {
-            "imAttr": "customfield_10118",
+            "imAttr": "customfield_10452",
             "appScanAttr": "Scan Tool Finding Id",
             "type": "string"
         },
         {
-            "imAttr": "customfield_10119",
+            "imAttr": "customfield_10407",
             "appScanAttr": "Finding location",
             "type": "string"
         },
         {
-            "imAttr": "customfield_10120",
+            "imAttr": "customfield_10412",
             "appScanAttr": "Scanning Tool",
             "type": "string"
         },
         {
-            "imAttr": "customfield_10121",
+            "imAttr": "customfield_10406",
+            "appScanAttr": "Finding Severity",
+            "type": "string"
+        },
+        {
+            "imAttr": "customfield_10507",
             "appScanAttr": "Detection Date",
+            "type": "string"
+        },
+        {
+            "imAttr": "customfield_10416",
+            "appScanAttr": "Application Mne",
             "type": "string"
         }
         

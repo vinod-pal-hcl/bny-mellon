@@ -165,32 +165,47 @@ createPayload = async (issue, imConfigObject, applicationId, applicationName) =>
         labelName = labelName.split(/\s+/).join('_');
         labelLanguage = labelLanguage.split(/\s+/).join('_');
         labelSource = labelSource.split(/\s+/).join('_');
-        labelSeverity = labelSeverity.split(/\s+/).join('_');
+        if (labelSeverity === "Information") {
+            labelSeverity = "Informational";
+          }
+        labelSeverity = labelSeverity
         labelStatus = labelStatus.split(/\s+/).join('_');
         labelID = labelID.split(/\s+/).join('_');
         labelLocation = labelLocation.split(/\s+/).join('_');
-        labelCreatedDate = labelCreatedDate.split(/\s+/).join(' ');
+        const createdDate = new Date(labelCreatedDate);
+        const isoDateString = createdDate.toISOString();
+        const modifiedDateString = isoDateString.replace("Z", "");
+        labelCreatedDate = modifiedDateString+"+0000";
+        const token = await appscanLogin();
+        const appDetails = await getApplicationDetails(applicationId,token);
+        const applicationMnemonic =  getApplicationMnemonic(appDetails.data);
 
         for(var i=0; i<attributeMappings.length; i++) {
            
                 if(attributeMappings[i].imAttr == 'labels'){
                 attrMap[attributeMappings[i].imAttr] = [labelName || '', String(applicationId)];
-                }else if(attributeMappings[i].imAttr == 'customfield_10114'){
+                }else if(attributeMappings[i].imAttr == 'customfield_10419'){
                     attrMap[attributeMappings[i].imAttr] = String(labelName);
                 }else if(attributeMappings[i].imAttr == 'customfield_10115'){
                     attrMap[attributeMappings[i].imAttr] = "ASE-Self Scan";
-                }else if(attributeMappings[i].imAttr == 'customfield_10116'){
+                }else if(attributeMappings[i].imAttr == 'customfield_10415'){
                     attrMap[attributeMappings[i].imAttr] = String(issue["Issue Type"]);
-                }else if(attributeMappings[i].imAttr == 'customfield_10117'){
-                    attrMap[attributeMappings[i].imAttr] = String(labelSeverity);
-                }else if(attributeMappings[i].imAttr == 'customfield_10118'){
+                }else if(attributeMappings[i].imAttr == 'customfield_10452'){
                     attrMap[attributeMappings[i].imAttr] = String(labelID);
-                }else if(attributeMappings[i].imAttr == 'customfield_10119'){
+                }else if(attributeMappings[i].imAttr == 'customfield_10407'){
                     attrMap[attributeMappings[i].imAttr] = String(labelLocation);
-                }else if(attributeMappings[i].imAttr == 'customfield_10120'){
-                    attrMap[attributeMappings[i].imAttr] = "AppScan Enterprise";
-                }else if(attributeMappings[i].imAttr == 'customfield_10121'){
-                    attrMap[attributeMappings[i].imAttr] = String(labelCreatedDate);
+                }else if(attributeMappings[i].imAttr == 'customfield_10412'){
+                    attrMap[attributeMappings[i].imAttr] = {
+                        "value": "AppScan Enterprise"
+                    }
+                }else if(attributeMappings[i].imAttr == 'customfield_10123'){
+                    attrMap[attributeMappings[i].imAttr] = {
+                        "value": labelSeverity
+                    }
+                }else if(attributeMappings[i].imAttr == 'customfield_10507'){
+                    attrMap[attributeMappings[i].imAttr] = labelCreatedDate;
+                }else if(attributeMappings[i].imAttr == 'customfield_10416'){
+                    attrMap[attributeMappings[i].imAttr] = applicationMnemonic;
                 }
 
                 
@@ -298,6 +313,57 @@ getConfig = function(method, token, url, data) {
     };
 }
 
+const appscanLogin = async () => {
+    var token;
+    try {
+        if(process.env.APPSCAN_PROVIDER == 'ASE'){
+            token = await aseLogin();
+            if (typeof token === 'undefined') logger.error(`Failed to login to the AppScan.`);
+        }
+        else if(process.env.APPSCAN_PROVIDER == 'ASOC'){
+            token = await asocLogin();
+            if (typeof token === 'undefined') logger.error(`Failed to login to the AppScan.`);
+        }
+    } catch (error) {
+        logger.error(`Login to AppScan failed with the error ${error}`);
+    }
+    return token;
+}
+const getApplicationDetails = async (appId, token) => {
+    const url = constants.ASE_APPLICATION_DETAILS.replace("{APPID}", appId);
+    return await util.httpCall("GET", token, url);
+};
+
+const getApplicationMnemonic =  (data) => {
+    const attributes = data.attributeCollection.attributeArray;
+    for (const attribute of attributes) {
+      if (attribute.name === "Application Mnemonic") {
+        return attribute.value[0];
+      }
+    }
+    return null;
+  }
+
+const aseLogin = async () => {
+    var inputData = {};
+    inputData["keyId"] = process.env.keyId;
+    inputData["keySecret"] = process.env.keySecret;
+    const result = await keyLogin(inputData);
+    return result.data.sessionId;
+}
+
+const asocLogin = async () => {
+    var inputData = {};
+    inputData["keyId"] = process.env.keyId;
+    inputData["keySecret"] = process.env.keySecret;
+    const result = await asocAuthService.keyLogin(inputData);
+    return result.data.Token;
+}
+
+const keyLogin = async (inputData) => {
+    const url = constants.ASE_API_KEYLOGIN;
+    return await util.httpCall("POST","", url, JSON.stringify(inputData));
+};
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
