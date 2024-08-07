@@ -25,7 +25,7 @@
             "type": "string"
         },
         {
-            "imAttr": "customfield_10115",
+            "imAttr": "customfield_10401",
             "appScanAttr": "Scan Type",
             "type": "string"
         },

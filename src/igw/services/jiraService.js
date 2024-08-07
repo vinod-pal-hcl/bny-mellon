@@ -186,8 +186,10 @@ createPayload = async (issue, imConfigObject, applicationId, applicationName) =>
                 attrMap[attributeMappings[i].imAttr] = [labelName || '', String(applicationId)];
                 }else if(attributeMappings[i].imAttr == 'customfield_10419'){
                     attrMap[attributeMappings[i].imAttr] = String(labelName);
-                }else if(attributeMappings[i].imAttr == 'customfield_10115'){
-                    attrMap[attributeMappings[i].imAttr] = "ASE-Self Scan";
+                }else if(attributeMappings[i].imAttr == 'customfield_10401'){
+                   attrMap[attributeMappings[i].imAttr] = {
+                        "value": "ASE - Self Service"
+                    }
                 }else if(attributeMappings[i].imAttr == 'customfield_10415'){
                     attrMap[attributeMappings[i].imAttr] = String(issue["Issue Type"]);
                 }else if(attributeMappings[i].imAttr == 'customfield_10452'){
