@@ -12,23 +12,23 @@
 2.  Download the binaries from the repository.
 3.  Open the command prompt from the home directory and run the command "npm install". This installs all the required npm libraries.
 4.  Edit the file '.env' (rename .env.temp to .env) from home directory to make changes to the below properties.  
-     ASE_URL = \<URL of the AppScan Enterprise. \>
-     keyId = \<AppScan Enterprise Key. \>
-     keySecret =  \<AppScan Enterprise Secret. \>
-     APPSCAN_PROVIDER = ASE
-     SECURE_PORT = \<Port Gateway application listens to\>  
-     SSL_PFX_CERT_FILE = \<Path to certificate in pfx format.\>  
-     SSL_PFX_CERT_PASSPHRASE = \<Certificate passphrase/password\>
-     LOCAL_ADMIN_USER=\<Set the only user who can login to IGW\>
-     ADMIN_USER_PASSWORD=\<The hashed password of the IGW user. To hash the password run the command "node .\cryptoService.js --hash <password>" from the base directory\>
-     APP_LOG = \<Path and name of the log file\>  
-     MAXLOGSIZE = \<Maximum size of the log file\>  
-     NUMBER_OF_BACKUPS = \<Number of backups\>
-     IM_PROVIDER = \<Provider Name. Ex: JIRA\>
-     GENERATE_HTML_FILE_JIRA=\< Set this to 'true' to attach Reports in Jira\>
-     SYNC_INTERVAL = \<Start the sync thread to push data from AppScan to Issue Management System. 1 means synchronizer runs everyday to push issues identified in the previous day. 2 means synchronizer runs once in 2 days to push issues 
+     - ASE_URL = \<URL of the AppScan Enterprise. \>
+     - keyId = \<AppScan Enterprise Key. \>
+     - keySecret =  \<AppScan Enterprise Secret. \>
+     - APPSCAN_PROVIDER = ASE
+     - SECURE_PORT = \<Port Gateway application listens to\>  
+     - SSL_PFX_CERT_FILE = \<Path to certificate in pfx format.\>  
+     - SSL_PFX_CERT_PASSPHRASE = \<Certificate passphrase/password\>
+     - LOCAL_ADMIN_USER=\<Set the only user who can login to IGW\>
+     - ADMIN_USER_PASSWORD=\<The hashed password of the IGW user. To hash the password run the command "node .\cryptoService.js --hash <password>" from the base directory\>
+     - APP_LOG = \<Path and name of the log file\>  
+     - MAXLOGSIZE = \<Maximum size of the log file\>  
+     - NUMBER_OF_BACKUPS = \<Number of backups\>
+     - IM_PROVIDER = \<Provider Name. Ex: JIRA\>
+     - GENERATE_HTML_FILE_JIRA=\< Set this to 'true' to attach Reports in Jira\>
+     - SYNC_INTERVAL = \<Start the sync thread to push data from AppScan to Issue Management System. 1 means synchronizer runs everyday to push issues identified in the previous day. 2 means synchronizer runs once in 2 days to push issues 
      identified in last 2 days. \>
-     IM_SYNC_INTERVAL = \< Bidirectional Feature: Update Issue status in Appscan. The sync interval in minutes, hours, days. Ex. 1d means synchronizer runs everyday to update status in APPSCAN in the previous day and today. 10m means           
+     - IM_SYNC_INTERVAL = \< Bidirectional Feature: Update Issue status in Appscan. The sync interval in minutes, hours, days. Ex. 1d means synchronizer runs everyday to update status in APPSCAN in the previous day and today. 10m means           
      synchronizer runs once in 10 minute to update status in APPSCAN in last 10 minute.1h means synchronizer runs once in 1hour to to update status in APPSCAN in last 1hour.\>
 6.  Start the 'Gateway' application running the command "npm start" from the home directory.
 7.  Access the APIs swagger page using the URL https://\<hostname\>:\<port\>/ase/api/swagger. You can get this URL from the console/log.
