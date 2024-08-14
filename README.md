@@ -30,13 +30,23 @@
      identified in last 2 days. \>
      - IM_SYNC_INTERVAL = \< Bidirectional Feature: Update Issue status in Appscan. The sync interval in minutes, hours, days. Ex. 1d means synchronizer runs everyday to update status in APPSCAN in the previous day and today. 10m means           
      synchronizer runs once in 10 minute to update status in APPSCAN in last 10 minute.1h means synchronizer runs once in 1hour to to update status in APPSCAN in last 1hour.\>
+5. Rename config/JIRA.json.temp to config/JIRA.json and make changes to the properties below as per your requirements.
+   - maxissues =  The maximum number of issues you want to process in this job.
+   - issuestates = A specific set of issue states to focus on.
+   - issueseverities = A specific set of issue severities to focus on.
+   - imurl = URL of your JIRA instance.
+   - imUserName = Jira Username to be used when running the job.
+   - imPassword = Password for the corresponding Jira User.
+   - imissuetype = Jira issue type like task, bug, epic, etc.
+   - severitymap - Edit the severitymap json as per your requirement. This will map the ASE Severity with Jira ticket priority.
+     
 6.  Start the 'Gateway' application running the command "npm start" from the home directory.
 7.  Access the APIs swagger page using the URL https://\<hostname\>:\<port\>/ase/api/swagger. You can get this URL from the console/log.
 8.  Use the API to provide Issue Management details and start the synchronizer or edit the file in config directory. For example, rename the file JIRA.  json.temp to JIRA.json and edit the issue management details.
-7.  To install/uninstall the application as a Windows Service run below commands from home directory.  
+9.  To install/uninstall the application as a Windows Service run below commands from home directory.  
     node service.js --install  
     node service.js --uninstall
-8.  If installing the service failed following the step 7, follow the below steps.
+10.  If installing the service failed following the step 7, follow the below steps.
       Download the nssm utility from "https://nssm.cc/download"
       Launch the nssm.exe from win64 folder by running the command 'nssm.exe install "HCL Issue Gateway"'
 
