@@ -39,14 +39,14 @@
    - imPassword = Password for the corresponding Jira User.
    - imissuetype = Jira issue type like task, bug, epic, etc.
    - severitymap - Edit the severitymap json as per your requirement. This will map the ASE Severity with Jira ticket priority.
-     
-6.  Start the 'Gateway' application running the command "npm start" from the home directory.
-7.  Access the APIs swagger page using the URL https://\<hostname\>:\<port\>/ase/api/swagger. You can get this URL from the console/log.
-8.  Use the API to provide Issue Management details and start the synchronizer or edit the file in config directory. For example, rename the file JIRA.  json.temp to JIRA.json and edit the issue management details.
-9.  To install/uninstall the application as a Windows Service run below commands from home directory.  
+6. Rename config/projectKey.json.temp to config/projectKey.json and map the ASE application ID with Jira Project Key as per your requirement.     
+7.  Start the 'Gateway' application running the command "npm start" from the home directory.
+8.  Access the APIs swagger page using the URL https://\<hostname\>:\<port\>/ase/api/swagger. You can get this URL from the console/log.
+9.  Use the API to provide Issue Management details and start the synchronizer or edit the file in config directory. For example, rename the file JIRA.  json.temp to JIRA.json and edit the issue management details.
+10.  To install/uninstall the application as a Windows Service run below commands from home directory.  
     node service.js --install  
     node service.js --uninstall
-10.  If installing the service failed following the step 7, follow the below steps.
+11.  If installing the service failed following the step 7, follow the below steps.
       Download the nssm utility from "https://nssm.cc/download"
       Launch the nssm.exe from win64 folder by running the command 'nssm.exe install "HCL Issue Gateway"'
 
