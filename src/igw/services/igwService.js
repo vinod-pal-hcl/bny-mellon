@@ -39,7 +39,7 @@ methods.getCompletedScans = async (syncInterval, aseToken) => {
     const endDate = date.toISOString();
 
     if (process.env.APPSCAN_PROVIDER == "ASE") {
-        const queryString = "LastRanBetweenFromAndTodate=" + fDate + "|" + tDate + ",JobType=2";
+        const queryString = "LastRanBetweenFromAndTodate=" + fDate + "|" + tDate + ",JobType=1|2";
         logger.info(`Fetching scans completed between ${fDate} and ${tDate}`);
         return await aseJobService.searchJobs(queryString, aseToken);
     } else if (process.env.APPSCAN_PROVIDER == "ASOC") {

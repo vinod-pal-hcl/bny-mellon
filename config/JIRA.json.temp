@@ -63,6 +63,21 @@
             "imAttr": "customfield_10416",
             "appScanAttr": "Application Mne",
             "type": "string"
+        },
+        {
+            "imAttr": "customfield_10414",
+            "appScanAttr": "Finding Authentication",
+            "type": "string"
+        },
+        {
+            "imAttr": "customfield_10404",
+            "appScanAttr": "Remediation Guidance",
+            "type": "string"
+        },
+        {
+            "imAttr": "customfield_10405",
+            "appScanAttr": "Scan Request ID",
+            "type": "string"
         }
         
     ]

@@ -200,7 +200,7 @@ createPayload = async (issue, imConfigObject, applicationId, applicationName) =>
                     attrMap[attributeMappings[i].imAttr] = {
                         "value": "AppScan Enterprise"
                     }
-                }else if(attributeMappings[i].imAttr == 'customfield_10123'){
+                }else if(attributeMappings[i].imAttr == 'customfield_10406'){
                     attrMap[attributeMappings[i].imAttr] = {
                         "value": labelSeverity
                     }
@@ -208,6 +208,16 @@ createPayload = async (issue, imConfigObject, applicationId, applicationName) =>
                     attrMap[attributeMappings[i].imAttr] = labelCreatedDate;
                 }else if(attributeMappings[i].imAttr == 'customfield_10416'){
                     attrMap[attributeMappings[i].imAttr] = applicationMnemonic;
+                }else if(attributeMappings[i].imAttr == 'customfield_10414'){
+                    attrMap[attributeMappings[i].imAttr] = {
+                        "value": "NA"
+                    }
+                }else if(attributeMappings[i].imAttr == 'customfield_10404'){
+                    attrMap[attributeMappings[i].imAttr] = {
+                        "value": "NA"
+                    }
+                }else if(attributeMappings[i].imAttr == 'customfield_10405'){
+                    attrMap[attributeMappings[i].imAttr] = "NA";
                 }
 
                 
