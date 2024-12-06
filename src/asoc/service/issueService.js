@@ -8,18 +8,18 @@ var methods = {};
 
 methods.getIssuesOfApplication = async (token, skipValue, appId) => {
     const appDetails = await methods.getApplicationDetails(appId, token);
-    try{
+    try {
         let data = appDetails?.data?.Items[0];
         const url = constants.ASOC_ISSUES_APPLICATION.replace("{APPID}", appId).replace('${skipValue}', skipValue);
         let appData = await util.httpCall("GET", token, url);
-        if(appData.code == 200){
+        if (appData.code == 200) {
             appData.data.applicationName = data?.Name || '';
         }
         return appData;
-    }catch(err){
+    } catch (err) {
         logger.error(`Failed to Fetch Application Issues ${skipValue} ${err}`)
     }
-    
+
 };
 
 methods.getIssuesOfScan = async (token, skipValue, scanId) => {
@@ -81,7 +81,7 @@ methods.getHTMLIssueDetails = async (appId, issueId, downloadPath, token) => {
     const reportID = 'f5eb6475-abff-468f-a35e-ac63d234c5a5'
     const getDownloadReportsUrl = await constants.ASOC_GET_HTML_ISSUE_DETAILS.replace("{REPORTID}", reportID); //GET REPORT DOWNLOAD URL
     const getReportStatusUrl = await constants.ASOC_REPORT_STATUS.replace("{REPORTID}", reportID); //GET REPORT STATUS
-    
+
     let intervalid
     async function testFunction() {
         intervalid = setInterval(async () => {
@@ -106,29 +106,28 @@ methods.downloadAsocReport = async (providerId, appId, scanId, issues, token) =>
 
         const getDownloadReportsUrl = await constants.ASOC_GET_HTML_ISSUE_DETAILS.replace("{REPORTID}", reportID); //GET REPORT DOWNLOAD URL
         const getReportStatusUrl = await constants.ASOC_REPORT_STATUS.replace("{REPORTID}", reportID); //GET REPORT STATUS
-        
+
         var downloadPath = `./temp/${appId}.html`;
         let intervalid;
         async function splitFile() {
             return new Promise(
                 function (resolve) {
                     return intervalid = setInterval(async () => {
-                    try{
-                        let getDownloadUrl = await util.httpCall("GET", token, getReportStatusUrl);
-                        getDownloadUrl?.data?.Items.map(async res => {
-                            if (res.Status == 'Ready' && res.Id == reportID) {
-                                console.log('Inside', token)
-                                let downloadFileData = await util.downloadFile(getDownloadReportsUrl, downloadPath, token);
-                                if (downloadFileData) {
-                                    let res = await igwService.splitHtmlFile(downloadPath, appId)
-                                    clearInterval(intervalid)
-                                    resolve(res)
+                        try {
+                            let getDownloadUrl = await util.httpCall("GET", token, getReportStatusUrl);
+                            getDownloadUrl?.data?.Items.map(async res => {
+                                if (res.Status == 'Ready' && res.Id == reportID) {
+                                    let downloadFileData = await util.downloadFile(getDownloadReportsUrl, downloadPath, token);
+                                    if (downloadFileData) {
+                                        let res = await igwService.splitHtmlFile(downloadPath, appId)
+                                        clearInterval(intervalid)
+                                        resolve(res)
+                                    }
                                 }
-                            }
-                        })
-                    }catch(err){
-                        logger.error(err)
-                    }
+                            })
+                        } catch (err) {
+                            logger.error(err)
+                        }
                     }, 3000)
                 }
             )
@@ -139,10 +138,10 @@ methods.downloadAsocReport = async (providerId, appId, scanId, issues, token) =>
         //         let intervalid = setInterval(async () => {
         //             try {
         //                 let getDownloadUrl = await util.httpCall("GET", token, getReportStatusUrl);
-        
+
         //                 if (getDownloadUrl.data.Status === 'Ready') {
         //                     let downloadFileData = await util.downloadFile(getDownloadReportsUrl, downloadPath, token);
-        
+
         //                     if (downloadFileData) {
         //                         let res = await igwService.splitHtmlFile(downloadPath, appId);
         //                         clearInterval(intervalid);
@@ -156,12 +155,24 @@ methods.downloadAsocReport = async (providerId, appId, scanId, issues, token) =>
         //         }, 3000);
         //     });
         // }
-        
+
         let splitFiles = await splitFile();
         return splitFiles;
     } catch (err) {
         throw err
     }
+}
+
+methods.getIssuesOfApplicationByStatusAndTime = async (appId, token, status, fromDateTime) => {
+    try {
+        const formattedFromDateTime = fromDateTime.replace(/:/g, "%3A");
+        const url = constants.ASOC_ISSUES_APPLICATION_STATUS_TIME.replace("{APPID}", appId).replace("{STATUS}", status).replace("{DATERANGE}", formattedFromDateTime);
+        return await util.httpCall("GET", token, url);
+    }
+    catch (err) {
+        logger.error(err);
+    }
+
 }
 
 module.exports = methods;

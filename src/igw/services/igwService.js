@@ -44,7 +44,7 @@ methods.getCompletedScans = async (syncInterval, aseToken) => {
         return await aseJobService.searchJobs(queryString, aseToken);
     } else if (process.env.APPSCAN_PROVIDER == "ASOC") {
         const queryString = constants.ASOC_JOB_SEARCH;
-        logger.info(`Fetching scans completed between ${fDate} and ${tDate}`); 
+        logger.info(`Fetching scans completed between ${fDate} and ${tDate}`);
         let result = await fetchAllData(asocJobService.searchJobs, aseToken, 200, [queryString]);
         result.data = result.data.Items.filter(a => a?.LatestExecution?.Status == 'Ready').filter(a => a?.LatestExecution?.ScanEndTime <= endDate && a?.LatestExecution?.ScanEndTime >= startDate);
         return result;
@@ -93,7 +93,7 @@ methods.updateImTickets = async (bodyData, imConfig, providerId, applicationId, 
 
 methods.updateImStatus = async (providerId, imConfig, bodyData, projectKey) => {
     let result;
-    if (providerId === constants.DTS_JIRA){
+    if (providerId === constants.DTS_JIRA) {
         result = await jiraService.updateImStatus(imConfig, bodyData, projectKey);
     }
 
@@ -110,8 +110,9 @@ methods.createImScanTickets = async (filteredIssues, imConfig, providerId, appli
 
 methods.getLatestImTickets = async (providerId, syncInterval, imConfig) => {
     var result;
-    if (providerId === constants.DTS_JIRA)
+    if (providerId === constants.DTS_JIRA) {
         result = await jiraService.getMarkedTickets(syncInterval, imConfig);
+    }
     return result;
 }
 
@@ -125,10 +126,10 @@ methods.getLatestImTicketsByProject = async (providerId, projectName, imConfig, 
 methods.attachIssueDataFile = async (ticket, downloadPath, imConfig, providerId) => {
     var result;
     if (providerId === constants.DTS_JIRA) {
-        try{
+        try {
             result = await jiraService.attachIssueDataFile(ticket.split("/browse/")[1], downloadPath, imConfig);
             logger.info(`Reports Attached to ${ticket}`)
-        }catch(err){
+        } catch (err) {
             logger.error(err.message)
         }
         return result
@@ -607,7 +608,7 @@ methods.splitHtmlFile = async (downloadPath, appId) => {
                 const fixGroupId = $element.find('.row .name:contains("Fix Group ID:")').next('.value').find('a').text().trim();
                 const howToFix = $(nextIssueHeader).find('.row .name:contains("How to Fix:")').next('.value').find('a').text();
                 let sectionHtml = $element.nextUntil('.issueHeader').addBack();
-                
+
                 // Replace Count in Issue Title 
                 if (sectionHtml.text().includes('Audit Trail')) {
                     sectionHtml.find('.h3group h3').text('Issue 1 of 1 - Details');
@@ -617,7 +618,7 @@ methods.splitHtmlFile = async (downloadPath, appId) => {
                     sectionHtml.find('.h3group h3').text('Issue 1 of 1 - Discussion');
                 }
                 sectionHtml.find('.h3group h2').text('Issue 1 of 1');
-                
+
                 let fixGroupData = issueTypeHtml + nextIssueHeader;
                 const severityElement = $element.find('.row .name:contains("Severity:")')
                 const severityClass = severityElement.next('.value').text().trim() == 'Informational' ? 'severity_0' : severityElement.next('.value').text().trim() == 'Low' ? 'severity_1' : severityElement.next('.value').text().trim() == 'Medium' ? 'severity_2' : 'severity_3'
@@ -655,9 +656,9 @@ methods.splitHtmlFile = async (downloadPath, appId) => {
             articleData[articleName] = articleContent;
         });
         objKeys.map(issue => {
-            if (sections[issue]['issue'] && issue != '' && sections[issue]['issue'] != '' && issue.length <50) {
+            if (sections[issue]['issue'] && issue != '' && sections[issue]['issue'] != '' && issue.length < 50) {
                 let htmlReports = addData.addData({ applicationName, businessImpact, reportName, reportDate, issue: sections[issue]['issue'], fixGroupId: sections[issue]['fixGroupId'], issueTypeName: sections[issue]['issueTypeName'], severityClass: sections[issue]['severityClass'], "howToFix": articleData[`${sections[issue]?.['href']?.[1]}`] || '', "howToFixTitle": sections[issue]['howToFix'], "issueTypeAttr": sections[issue]?.['href']?.[1] || '', "fixGroupHeaderData": sections[issue]['fixGroupData'] });
-                
+
                 fs.writeFile(`./tempReports/${appId}_${issue}.html`, htmlReports, async err => {
                     if (err) {
                         logger.error(`Error Splitting HTML file for ${appId} - ${issue} - ${err}`)
@@ -674,21 +675,21 @@ const fetchAllData = async (serviceName, appscanToken, status, value) => {
     let skipValue = 0;
     let result = {};
     try {
-        while(true){
-            try{
+        while (true) {
+            try {
                 let resData = value && value.length > 0 ? await serviceName(appscanToken, skipValue, ...value) : await serviceName(appscanToken, skipValue);
-                if(resData.data.Count <= skipValue){
+                if (resData.data.Count <= skipValue) {
                     break;
                 }
-                
-                if(resData && Object.keys(result).length == 0 && resData.code == status && resData.data.Items.length >= 0){
+
+                if (resData && Object.keys(result).length == 0 && resData.code == status && resData.data.Items.length >= 0) {
                     result = resData;
-                }else if(resData && resData.code == status && resData.data.Items.length > 0){
+                } else if (resData && resData.code == status && resData.data.Items.length > 0) {
                     result.data.Items = [...resData?.data?.Items, ...result.data.Items]
                 }
-                if(skipValue > 15000) break;
+                if (skipValue > 15000) break;
             }
-            catch(err){
+            catch (err) {
                 logger.error(err?.response?.data.Message || err.message)
             }
             skipValue += 500;
@@ -699,5 +700,10 @@ const fetchAllData = async (serviceName, appscanToken, status, value) => {
         throw error;
     }
 };
+
+methods.getJiraIssueProperty = async (issueKey, imConfig) => {
+    const issuePropertyResponse = await jiraService.getJiraIssueProperty(issueKey, imConfig);
+    return issuePropertyResponse.data;
+}
 
 module.exports = methods;

@@ -18,6 +18,7 @@ var constants = {
 	ASE_API_KEYLOGIN: "/api/keylogin/apikeylogin",
 	ASE_SCAN_DETAILS: "/api/jobs/{JOBID}",
 	ASE_ISSUES_APPLICATION: "/api/issues?query=Application%20Name%3D{APPNAME}&compactResponse=false",
+	API_ISSUES_APPLICATION_STATUS_TIME: "/api/issues?query=Application%20Name%3D{APPNAME}%2CStatus%3D{STATUS}%2CLast%20Updated%3D{DATERANGE}&compactResponse=false",
 	ASE_APPLICATION_DETAILS: "/api/applications/{APPID}",
 	ASE_ISSUE_DETAILS: "/api/issues/{ISSUEID}/application/{APPID}/",
 	ASE_UPDATE_ISSUE: "/api/issues/{ISSUEID}/",
@@ -28,7 +29,8 @@ var constants = {
 	ASOC_API_KEYLOGIN: "/api/v4/Account/ApiKeyLogin",
 	ASOC_JOB_SEARCH: '/api/v4/Scans?%24top=500&%24skip=${skipValue}&%24count=true',
 	ASOC_ISSUES_APPLICATION: "/api/v4/Issues/Application/{APPID}?applyPolicies=None&%24top=500&%24skip=${skipValue}&%24count=true",
-	ASOC_APPLICATION_DETAILS: "/api/v4/Apps?%24filter=Id%20eq%20{APPID}&%24count=false", 
+	ASOC_ISSUES_APPLICATION_STATUS_TIME: "/api/v4/Issues/Application/{APPID}?applyPolicies=None&%24top=100&%24filter=%28%28Status%20eq%20%27{STATUS}%27%29%20and%20%28LastUpdated%20gt%20{DATERANGE}%29%29&%24count=true",
+	ASOC_APPLICATION_DETAILS: "/api/v4/Apps?%24filter=Id%20eq%20{APPID}&%24count=false",
 	ASOC_ISSUE_DETAILS: "/api/v4/Issues/{ISSUEID}",
 	ASOC_ISSUE_COMMENTS: "/api/v4/Issues/{ISSUEID}/Comments?%24top=500&%24skip=${skipValue}&%24count=true",
 	ASOC_UPDATE_ISSUE: "/api/v4/Issues/Application/{APPID}?odataFilter=Id%20eq%20{ISSUEID}&applyPolicies=All",
@@ -38,39 +40,41 @@ var constants = {
 	ASOC_GET_HTML_ISSUE_DETAILS: "/api/v4/Reports/{REPORTID}/Download",
 	ASOC_SCAN_ISSUE_DETAILS: "/api/v4/Issues/Scan/{SCANID}?applyPolicies=None&%24top=500&%24skip=${skipValue}&%24count=true",
 	DAST_SCAN_DATA: '/api/v4/Scans/Dast/{SCANID}',
-    SAST_SCAN_DATA: '/api/v4/Scans/Sast/{SCANID}',
-    IAST_SCAN_DATA: '/api/v4/Scans/DownloadIastConfig/{SCANID}',
-    SCA_SCAN_DATA: '/api/v4/Scans/Sca/{SCANID}',
-	CREATE_REPORT_REQUEST_CONFIGURATION : {
+	SAST_SCAN_DATA: '/api/v4/Scans/Sast/{SCANID}',
+	IAST_SCAN_DATA: '/api/v4/Scans/DownloadIastConfig/{SCANID}',
+	SCA_SCAN_DATA: '/api/v4/Scans/Sca/{SCANID}',
+	CREATE_REPORT_REQUEST_CONFIGURATION: {
 		"Configuration": {
-		  "Summary": true,
-		  "Details": true,
-		  "Discussion": true,
-		  "Overview": true,
-		  "TableOfContent": true,
-		  "Advisories": true,
-		  "FixRecommendation": true,
-		  "History": true,
-		  "Coverage": true,
-		  "MinimizeDetails": true,
-		  "Articles": true,
-		  "ReportFileType": "html",
+			"Summary": true,
+			"Details": true,
+			"Discussion": true,
+			"Overview": true,
+			"TableOfContent": true,
+			"Advisories": true,
+			"FixRecommendation": true,
+			"History": true,
+			"Coverage": true,
+			"MinimizeDetails": true,
+			"Articles": true,
+			"ReportFileType": "html",
 		},
 		"OdataFilter": "",
 		"ApplyPolicies": "None",
 		"SelectPolicyIds": [
-		  "00000000-0000-0000-0000-000000000000"
+			"00000000-0000-0000-0000-000000000000"
 		]
-	  },
+	},
 
 	//JIRA APIs
 	JIRA_PING_API: "/rest/api/latest/mypermissions",
 	JIRA_ATTACH_FILE: "/rest/api/latest/issue/{JIRAID}/attachments",
 	JIRA_CREATE_TICKET: "/rest/api/2/issue",
 	JIRA_UPDATE_TICKET: "/rest/api/2/issue/{JIRAID}",
-	JIRA_LATEST_ISSUE : "/rest/api/2/search?jql=status=Closed%20AND%20updated%20>=%20-{SYNCINTERVAL}&maxResults=100",
-	JIRA_LABELS_ISSUE : "/rest/api/2/search?jql=project%20=%20{PROJECTNAME}%20AND%20summary%20~%20%27found%20by%20Appscan%27&maxResults=100&startAt={SKIPVALUE}",
-	JIRA_UPDATE_TRANSITION : "/rest/api/2/issue/{JIRAID}/transitions",
+	JIRA_LATEST_ISSUE: "/rest/api/2/search?jql=status=Closed%20AND%20updated%20>=%20-{SYNCINTERVAL}&maxResults=100",
+	JIRA_LABELS_ISSUE: "/rest/api/2/search?jql=project%20=%20{PROJECTNAME}%20AND%20summary%20~%20%27found%20by%20Appscan%27&maxResults=100&startAt={SKIPVALUE}",
+	JIRA_UPDATE_TRANSITION: "/rest/api/2/issue/{JIRAID}/transitions",
+	JIRA_ISSUE_PROPERTY: "/rest/api/2/issue/{JIRAID}/properties/{PROPERTY_KEY}",
+	JIRA_ISSUE_SEARCH: "/rest/api/2/search?jql=",
 
 	INVALID_ADMIN_EMAIL: "Invalid admin email",
 	INVALID_ADMIN_PASSWORD: "Invalid admin password",
@@ -87,12 +91,12 @@ var constants = {
 	INVALID_PROJECT_KEY: "Invalid Project Key",
 	INVALID_IM_ISSUE_TYPE: "Invalid IM issue type",
 	INVALID_IM_SUMMARY: "Invalid ticket summary",
-	
+
 
 	ERR_WRONG_CREDENTIALS: "Wrong Credentials",
-	HASHING_SALT: '1ffcd164fb8efa56604a4425d14c4455',	
+	HASHING_SALT: '1ffcd164fb8efa56604a4425d14c4455',
 	DTS_JIRA: "JIRA",
 	PROVIDERS: ["JIRA"],
 };
 
-module.exports = Object.freeze( constants );
+module.exports = Object.freeze(constants);
