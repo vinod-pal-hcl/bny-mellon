@@ -140,7 +140,6 @@ methods.createScanTickets = async (issues, imConfigObject, applicationId, applic
             const imConfig = getConfig("POST", basicToken, imConfigObject.imurl + constants.JIRA_CREATE_TICKET, imPayload);
             const result = await util.httpImCall(imConfig);
             await delay(3000);
-            console.log('jiraService 144', result);
             if (result.code === 201) {
                 const imTicket = imConfigObject.imurl + "/browse/" + result.data.key;
                 process.env.APPSCAN_PROVIDER == "ASOC" ? success.push({ scanId: scanId, ticket: imTicket }) : success.push({ scanId: scanId, ticket: imTicket });

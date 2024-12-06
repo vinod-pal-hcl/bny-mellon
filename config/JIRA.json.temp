@@ -80,5 +80,13 @@
             "type": "string"
         }
         
-    ]
+    ],
+    "bidirectionalStatusMapping": {
+        "<Jira status>": "<AppScan status>",
+        "<Jira status>": "<AppScan status>"
+    },
+    "statusIdMapping": {
+        "<Jira status name>": "<Jira status id>",
+        "<Jira status name>": "<Jira status id>"
+    }
 }
