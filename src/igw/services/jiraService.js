@@ -197,74 +197,74 @@ const createPayload = async (issue, imConfigObject, applicationId, applicationNa
         attrMap["description"] = JSON.stringify(issue, null, 4);
         const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
 
-        // let labelName = issue["Application Name"] != null || issue["Application Name"] != undefined ? issue["Application Name"].trim() || '' : '';
-        // let labelLanguage = issue?.Language != null || issue?.Language != undefined ? issue?.Language.trim() || '' : '';
-        // let labelSource = issue?.Source != null || issue?.Source != undefined ? issue?.Source.trim() || '' : '';
-        // let labelSeverity = issue?.Severity != null || issue?.Severity != undefined ? issue?.Severity.trim() || '' : '';
-        // let labelStatus = issue?.Status != null || issue?.Status != undefined ? issue?.Status.trim() || '' : '';
-        // let labelID = issue?.id != null || issue?.id != undefined ? issue?.id.trim() || '' : '';
-        // let labelLocation = issue?.Location != null || issue?.Location != undefined ? issue?.Location.trim() || '' : '';
-        // let labelCreatedDate = issue["Date Created"] != null || issue["Date Created"] != undefined ? issue["Date Created"].trim() || '' : '';
-        // labelName = labelName.split(/\s+/).join('_');
-        // labelLanguage = labelLanguage.split(/\s+/).join('_');
-        // labelSource = labelSource.split(/\s+/).join('_');
-        // if (labelSeverity === "Information") {
-        //     labelSeverity = "Informational";
-        // }
-        // labelSeverity = labelSeverity
-        // labelStatus = labelStatus.split(/\s+/).join('_');
-        // labelID = labelID.split(/\s+/).join('_');
-        // labelLocation = labelLocation.split(/\s+/).join('_');
-        // const createdDate = new Date(labelCreatedDate);
-        // const isoDateString = createdDate.toISOString();
-        // const modifiedDateString = isoDateString.replace("Z", "");
-        // labelCreatedDate = modifiedDateString + "+0000";
-        // const token = await appscanLogin();
-        // const appDetails = await getApplicationDetails(applicationId, token);
-        // const applicationMnemonic = getApplicationMnemonic(appDetails.data);
+        let labelName = issue["Application Name"] != null || issue["Application Name"] != undefined ? issue["Application Name"].trim() || '' : '';
+        let labelLanguage = issue?.Language != null || issue?.Language != undefined ? issue?.Language.trim() || '' : '';
+        let labelSource = issue?.Source != null || issue?.Source != undefined ? issue?.Source.trim() || '' : '';
+        let labelSeverity = issue?.Severity != null || issue?.Severity != undefined ? issue?.Severity.trim() || '' : '';
+        let labelStatus = issue?.Status != null || issue?.Status != undefined ? issue?.Status.trim() || '' : '';
+        let labelID = issue?.id != null || issue?.id != undefined ? issue?.id.trim() || '' : '';
+        let labelLocation = issue?.Location != null || issue?.Location != undefined ? issue?.Location.trim() || '' : '';
+        let labelCreatedDate = issue["Date Created"] != null || issue["Date Created"] != undefined ? issue["Date Created"].trim() || '' : '';
+        labelName = labelName.split(/\s+/).join('_');
+        labelLanguage = labelLanguage.split(/\s+/).join('_');
+        labelSource = labelSource.split(/\s+/).join('_');
+        if (labelSeverity === "Information") {
+            labelSeverity = "Informational";
+        }
+        labelSeverity = labelSeverity
+        labelStatus = labelStatus.split(/\s+/).join('_');
+        labelID = labelID.split(/\s+/).join('_');
+        labelLocation = labelLocation.split(/\s+/).join('_');
+        const createdDate = new Date(labelCreatedDate);
+        const isoDateString = createdDate.toISOString();
+        const modifiedDateString = isoDateString.replace("Z", "");
+        labelCreatedDate = modifiedDateString + "+0000";
+        const token = await appscanLogin();
+        const appDetails = await getApplicationDetails(applicationId, token);
+        const applicationMnemonic = getApplicationMnemonic(appDetails.data);
 
-        // for (var i = 0; i < attributeMappings.length; i++) {
+        for (var i = 0; i < attributeMappings.length; i++) {
 
-        //     if (attributeMappings[i].imAttr == 'labels') {
-        //         attrMap[attributeMappings[i].imAttr] = [labelName || '', String(applicationId)];
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10419') {
-        //         attrMap[attributeMappings[i].imAttr] = String(labelName);
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10401') {
-        //         attrMap[attributeMappings[i].imAttr] = {
-        //             "value": "ASE - Self Service"
-        //         }
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10415') {
-        //         attrMap[attributeMappings[i].imAttr] = String(issue["Issue Type"]);
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10452') {
-        //         attrMap[attributeMappings[i].imAttr] = String(labelID);
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10407') {
-        //         attrMap[attributeMappings[i].imAttr] = String(labelLocation);
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10412') {
-        //         attrMap[attributeMappings[i].imAttr] = {
-        //             "value": "AppScan Enterprise"
-        //         }
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10406') {
-        //         attrMap[attributeMappings[i].imAttr] = {
-        //             "value": labelSeverity
-        //         }
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10507') {
-        //         attrMap[attributeMappings[i].imAttr] = labelCreatedDate;
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10416') {
-        //         attrMap[attributeMappings[i].imAttr] = applicationMnemonic;
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10414') {
-        //         attrMap[attributeMappings[i].imAttr] = {
-        //             "value": "NA"
-        //         }
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10404') {
-        //         attrMap[attributeMappings[i].imAttr] = {
-        //             "value": "NA"
-        //         }
-        //     } else if (attributeMappings[i].imAttr == 'customfield_10405') {
-        //         attrMap[attributeMappings[i].imAttr] = "NA";
-        //     }
+            if (attributeMappings[i].imAttr == 'labels') {
+                attrMap[attributeMappings[i].imAttr] = [labelName || '', String(applicationId)];
+            } else if (attributeMappings[i].imAttr == 'customfield_10419') {
+                attrMap[attributeMappings[i].imAttr] = String(labelName);
+            } else if (attributeMappings[i].imAttr == 'customfield_10401') {
+                attrMap[attributeMappings[i].imAttr] = {
+                    "value": "ASE - Self Service"
+                }
+            } else if (attributeMappings[i].imAttr == 'customfield_10415') {
+                attrMap[attributeMappings[i].imAttr] = String(issue["Issue Type"]);
+            } else if (attributeMappings[i].imAttr == 'customfield_10452') {
+                attrMap[attributeMappings[i].imAttr] = String(labelID);
+            } else if (attributeMappings[i].imAttr == 'customfield_10407') {
+                attrMap[attributeMappings[i].imAttr] = String(labelLocation);
+            } else if (attributeMappings[i].imAttr == 'customfield_10412') {
+                attrMap[attributeMappings[i].imAttr] = {
+                    "value": "AppScan Enterprise"
+                }
+            } else if (attributeMappings[i].imAttr == 'customfield_10406') {
+                attrMap[attributeMappings[i].imAttr] = {
+                    "value": labelSeverity
+                }
+            } else if (attributeMappings[i].imAttr == 'customfield_10507') {
+                attrMap[attributeMappings[i].imAttr] = labelCreatedDate;
+            } else if (attributeMappings[i].imAttr == 'customfield_10416') {
+                attrMap[attributeMappings[i].imAttr] = applicationMnemonic;
+            } else if (attributeMappings[i].imAttr == 'customfield_10414') {
+                attrMap[attributeMappings[i].imAttr] = {
+                    "value": "NA"
+                }
+            } else if (attributeMappings[i].imAttr == 'customfield_10404') {
+                attrMap[attributeMappings[i].imAttr] = {
+                    "value": "NA"
+                }
+            } else if (attributeMappings[i].imAttr == 'customfield_10405') {
+                attrMap[attributeMappings[i].imAttr] = "NA";
+            }
 
 
-        // }
+        }
         payload["fields"] = attrMap;
         return payload;
     }
