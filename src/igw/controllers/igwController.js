@@ -409,7 +409,7 @@ const startStatusSyncCron = async (providerId, syncinterval) => {
                             "id": `${imConfig.statusIdMapping["False Positive"]}`
                         }
                     };
-                    await updateStatusInProvider(providerId, imConfig, bodyData, keyId);
+                    await updateStatusInProvider(providerId, imConfig, bodyData, keyId, 'False Positive');
                 }
             } catch (err) {
                 logger.error(err)
@@ -535,10 +535,10 @@ const updateIssuesOfApplication = async (issueId, applicationId, status, comment
     }
 }
 
-const updateStatusInProvider = async (providerId, imConfig, bodyData, projectKey) => {
+const updateStatusInProvider = async (providerId, imConfig, bodyData, projectKey, newStatus) => {
     try {
         const result = await igwService.updateImStatus(providerId, imConfig, bodyData, projectKey)
-        logger.info(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Status updated in the ${providerId} ticket ${projectKey}`)
+        logger.info(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Status of the ${providerId} ticket with id ${projectKey} has been changed${newStatus ? ` to ${newStatus}` : ''}.`);
     } catch (error) {
         throw `Failed to update the status for IssueId - ${projectKey} with error as - ${error}`
     }
