@@ -190,7 +190,7 @@ const createPayload = async (issue, imConfigObject, applicationId, applicationNa
         if (process.env.APPSCAN_PROVIDER == "ASOC") {
             attrMap["summary"] = applicationName + " - " + issue["IssueType"] + " found by AppScan";
         } else {
-            attrMap["summary"] = issue["Issue Type"].replaceAll("&#40;", "(").replaceAll("&#41;", ")");
+            attrMap["summary"] = issue["Issue Type"].replaceAll("&#40;", "(").replaceAll("&#41;", ")").replaceAll("&#34;", '"');
         }
 
 
