@@ -46,11 +46,11 @@ methods.createTickets = async (issues, imConfigObject, applicationId, applicatio
             }
             else {
                 process.env.APPSCAN_PROVIDER == "ASOC" ? failures.push({ issueId: issues[i]["Id"], errorCode: result.code, errorMsg: result.data }) : failures.push({ issueId: issues[i]["id"], errorCode: result.code, errorMsg: result.data });
-                logger.error(`Failed to create ticket for issue Id ${issues[i]["Id"]} and the error is ${JSON.stringify(result.data)}`);
+                logger.error(`Failed to create ticket for issue Id ${process.env.APPSCAN_PROVIDER == "ASOC" ? issues[i]["Id"] : issues[i]["id"]} and the error is ${JSON.stringify(result.data)}`);
             }
         } catch (error) {
-            logger.error(`Failed to create ticket for issue Id ${issues[i]["Id"]} and the error is ${JSON.stringify(error.response.data)}`);
-            failures.push({ issueId: issues[i]["Id"], errorMsg: error.message });
+            logger.error(`Failed to create ticket for issue Id ${process.env.APPSCAN_PROVIDER == "ASOC" ? issues[i]["Id"] : issues[i]["id"]} and the error is ${JSON.stringify(error.response.data)}`);
+            failures.push({ issueId: process.env.APPSCAN_PROVIDER == "ASOC" ? issues[i]["Id"] : issues[i]["id"], errorMsg: error.message });
         }
     }
     output["success"] = success;
