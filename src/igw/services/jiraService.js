@@ -146,7 +146,7 @@ methods.createScanTickets = async (issues, imConfigObject, applicationId, applic
             }
             else {
                 process.env.APPSCAN_PROVIDER == "ASOC" ? failures.push({ scanId: scanId, errorCode: result.code, errorMsg: result.data }) : failures.push({ scanId: scanId, errorCode: result.code, errorMsg: result.data });
-                logger.error(`Failed to create ticket for scan Id ${scanId} and the error is ${result.data}`);
+                logger.error(`Failed to create ticket for scan Id ${scanId} and the error is ${JSON.stringify(result.data)}`);
             }
         } catch (error) {
             logger.error(`Failed to create ticket for scan Id ${scanId} and the error is ${JSON.stringify(error.response.data)}`);
@@ -333,6 +333,10 @@ methods.attachIssueDataFile = async (ticket, filePath, imConfigObject) => {
     let userData = imConfigObject.imUserName + ":" + imConfigObject.imPassword;
     var basicToken = `Basic ${Buffer.from(userData).toString('base64')}`;
     const imConfig = getConfig("POST", basicToken, url, formData);
+    imConfig.headers = {
+        ...imConfig.headers,
+        ...formData.getHeaders()
+    };
     return await util.httpImCall(imConfig);
 }
 
