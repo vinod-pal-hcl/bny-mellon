@@ -2,13 +2,13 @@
 
 ## Prerequisites:
 
-1.  A Node JS runtime of version 18.18.0  
+1.  A Node JS runtime of version >= 18.18.0  
 2.  HCL Appscan Enterprise installation v10.x  
 3.  A supported Issue Management system: Jira  
 
 ## Installation steps
 
-1.  Install the Node JS runtime of version 18.18.0 (https://nodejs.org/en/)
+1.  Install the Node JS runtime of version >= 18.18.0 (https://nodejs.org/en/)
 2.  Download the binaries from the repository.
 3.  Open the command prompt from the home directory and run the command "npm install". This installs all the required npm libraries.
 4.  Edit the file '.env' (rename .env.temp to .env) from home directory to make changes to the below properties.  
@@ -39,14 +39,17 @@
    - imPassword = Password for the corresponding Jira User.
    - imissuetype = Jira issue type like task, bug, epic, etc.
    - severitymap - Edit the severitymap json as per your requirement. This will map the ASE Severity with Jira ticket priority.
-6. Rename config/projectKey.json.temp to config/projectKey.json and map the ASE application ID with Jira Project Key as per your requirement.     
-7.  Start the 'Gateway' application running the command "npm start" from the home directory.
-8.  Access the APIs swagger page using the URL https://\<hostname\>:\<port\>/ase/api/swagger. You can get this URL from the console/log.
-9.  Use the API to provide Issue Management details and start the synchronizer or edit the file in config directory. For example, rename the file JIRA.  json.temp to JIRA.json and edit the issue management details.
-10.  To install/uninstall the application as a Windows Service run below commands from home directory.  
+    - bidirectionalStatusMapping = This mapping will contain the status correspondence from JIRA to ASE. For example, "Closed":"Fixed" indicates that a status marked as "Closed" in JIRA will update the corresponding status in ASE to "Fixed".
+    - statusIdMapping = This mapping contains the JIRA status and its corresponding status ID.
+6. Rename config/projectKey.json.temp to config/projectKey.json and map the ASE application ID with Jira Project Key as per your requirement.
+7. Rename config/projectScanKey.json.temp to config/projectScanKey.json and map the ASE application ID with Jira Project Key as per your requirement.
+8.  To start the 'Gateway' application locally run the command "npm start" from the root directory OR if you want to install it as a service then please refer next step.
+9.  To install/uninstall the application as a Windows Service run below commands from root directory.  
     node service.js --install  
     node service.js --uninstall
-11.  If installing the service failed following the step 7, follow the below steps.
+10.  Access the APIs swagger page using the URL https://\<hostname\>:\<port\>/ase/api/swagger. You can get this URL from the console/log.
+11.  Use the API to provide Issue Management details and start the synchronizer or edit the file in config directory. For example, rename the file JIRA.  json.temp to JIRA.json and edit the issue management details.
+12.  If installing the service failed following the step 9, follow the below steps.
       Download the nssm utility from "https://nssm.cc/download"
       Launch the nssm.exe from win64 folder by running the command 'nssm.exe install "HCL Issue Gateway"'
 
