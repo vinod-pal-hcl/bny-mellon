@@ -1,6 +1,6 @@
 {
     "maxissues": 1000,
-    "issuestates": "New,Open,InProgress,Reopened",
+    "issuestates": "New,Open,InProgress,Reopened,Noise",
     "issueseverities": "Critical,High,Medium",
     "imurl": "<Jira URL>",
     "imUserName": "<username>",
@@ -80,5 +80,13 @@
             "type": "string"
         }
         
-    ]
+    ],
+    "bidirectionalStatusMapping": {
+        "<Jira status>": "<AppScan status>",
+        "<Jira status>": "<AppScan status>"
+    },
+    "statusIdMapping": {
+        "<Jira status name>": "<Jira status id>",
+        "<Jira status name>": "<Jira status id>"
+    }
 }
