@@ -163,10 +163,25 @@ methods.downloadAsocReport = async (providerId, appId, scanId, issues, token) =>
     }
 }
 
+
 methods.getIssuesOfApplicationByStatusAndTime = async (appId, token, status, fromDateTime) => {
     try {
         const formattedFromDateTime = fromDateTime.replace(/:/g, "%3A");
-        const url = constants.ASOC_ISSUES_APPLICATION_STATUS_TIME.replace("{APPID}", appId).replace("{STATUS}", status).replace("{DATERANGE}", formattedFromDateTime);
+
+        //Here we are iterating through the status array and creating a string for all the status values
+        //e.g. if status = ['Open', 'Closed'] 
+        // then statusString = 'Status%20eq%20%27Open%27%20or%20Status%20eq%20%27Closed%27
+        // which is equivalent to Status eq 'Open' or Status eq 'Closed'
+        let statusString = '';
+        status.forEach((element, index) => {
+            if (index == 0) {
+                statusString = `Status%20eq%20%27${element}%27`
+            } else {
+                statusString = statusString + `%20or%20Status%20eq%20%27${element}%27`
+            }
+        });
+        const url = constants.ASOC_ISSUES_APPLICATION_STATUS_TIME.replace("{APPID}", appId).replace("{STATUS}", statusString).replace("{DATERANGE}", formattedFromDateTime);
+        console.log(url)
         return await util.httpCall("GET", token, url);
     }
     catch (err) {

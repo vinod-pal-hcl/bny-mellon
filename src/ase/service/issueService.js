@@ -7,10 +7,10 @@ const app = require("../../../app");
 var methods = {};
 
 
-methods.getIssuesOfApplication = async (appId, token) => {
+methods.getIssuesOfApplication = async (appId, token, headers) => {
     const appDetails = await methods.getApplicationDetails(appId, token);
     const url = constants.ASE_ISSUES_APPLICATION.replace("{APPNAME}", appDetails.data.name);
-    return await util.httpCall("GET", token, url);
+    return await util.httpCall("GET", token, url, '', '', headers);
 };
 
 /*
@@ -26,11 +26,14 @@ methods.getIssuesOfApplicationByStatusAndTime = async (appId, token, status, fro
     try {
         const appDetails = await methods.getApplicationDetails(appId, token);
         const applicationName = appDetails.data.name.toString().replace(/ /g, "%20");
-        status = status.replace(/ /g, "%20");
         const formattedFromDateTime = fromDateTime.replace(/:/g, "%3A");
         const formattedToDateTime = toDateTime.replace(/:/g, "%3A");
         const dateRange = `${formattedFromDateTime}%5C%2C${formattedToDateTime}`;
-        const url = constants.API_ISSUES_APPLICATION_STATUS_TIME.replace("{APPNAME}", applicationName).replace("{STATUS}", status).replace("{DATERANGE}", dateRange);
+        let statusUrl = '';
+        status.forEach((stat) => {
+            statusUrl += `Status%3D${stat}%2C`
+        })
+        const url = constants.API_ISSUES_APPLICATION_STATUS_TIME.replace("{APPNAME}", applicationName).replace("{STATUS}", statusUrl).replace("{DATERANGE}", dateRange);
         return await util.httpCall("GET", token, url);
     }
     catch (err) {

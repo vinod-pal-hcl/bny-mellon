@@ -189,7 +189,6 @@ methods.startStatusSync = async (providerId, syncinterval) => {
     var statusJob = new CronJob(
         pattern,
         function () {
-            startReopenendTicketCron(providerId, syncinterval);
             startStatusSyncCron(providerId, syncinterval);
         },
         null,
@@ -250,7 +249,7 @@ const getCompletedScans = async (period, token) => {
 const getLatestProviderTickets = async (providerId, period) => {
     var completedScans;
     try {
-        let imConfig = await getIMConfig(providerId);
+        let imConfig = await methods.getIMConfig(providerId);
         const result = await igwService.getLatestImTickets(providerId, period, imConfig);
 
         if (result.code < 200 || result.code > 299) logger.error(`Failed to fetch provider tickets ${result.data}`);
@@ -267,6 +266,12 @@ const getLatestProviderTickets = async (providerId, period) => {
 const startCron = async (providerId, syncinterval) => {
     const token = await appscanLoginController();
     if (typeof token === 'undefined') return;
+
+    const imConfig = await methods.getIMConfig(providerId);
+    if (!imConfig) {
+        logger.error(`${providerId} configuration file is missing or invalid`);
+        return;
+    }
 
     const completedScans = await getCompletedScans(syncinterval, token);
     if (typeof completedScans === 'undefined') return;
@@ -309,16 +314,16 @@ const startProviderCron = async (providerId, syncinterval) => {
     try {
         const token = await appscanLoginController();
 
-        const imConfig = await getIMConfig(providerId);
-        if (!imConfig || !imConfig.bidirectionalStatusMapping) {
-            logger.error(`Configuration for provider ${providerId} is missing or does not have bidirectionalStatusMapping`);
+        const imConfig = await methods.getIMConfig(providerId);
+        if (!imConfig || !imConfig.jiraToAppScanStatusMapping) {
+            logger.error(`Configuration for provider ${providerId} is missing or does not have jiraToAppScanStatusMapping`);
             return;
         }
 
-        const bidrectionalMapping = imConfig.bidirectionalStatusMapping;
+        const bidrectionalMapping = imConfig.jiraToAppScanStatusMapping;
         const imStatus = Object.keys(bidrectionalMapping);
         if (imStatus.length == 0) {
-            logger.error(`No bidierectional status mapping found for provider ${providerId}`);
+            logger.error(`No ${providerId} to ${process.env.APPSCAN_PROVIDER} status mapping found`);
             return;
         }
 
@@ -351,40 +356,30 @@ const startProviderCron = async (providerId, syncinterval) => {
     }
 }
 
-const startReopenendTicketCron = async (providerId, syncinterval) => {
-    const token = await appscanLoginController();
-
-    if (typeof token === 'undefined') return;
-    if (reopenedIssues.size != 0) {
-        let imConfig = await getIMConfig(providerId);
-        for (let [key, value] of reopenedIssues) {
-            try {
-                let keyId = value.split('/')[4]
-                let bodyData = {
-                    "transition": {
-                        "id": "11"
-                    }
-                }
-                await updateStatusInProvider(providerId, imConfig, bodyData, keyId);
-                reopenedIssues.delete(key);
-            } catch (err) {
-                logger.error(err)
-            }
-        }
-    }
-}
-
 const startStatusSyncCron = async (providerId, syncinterval) => {
     const token = await appscanLoginController();
-    if (typeof token === 'undefined') {
+    if (!token) {
         logger.error('Not a valid token');
         return;
     }
 
     let issuedToBeupdated = [];
+    const imConfig = await methods.getIMConfig(providerId);
+    if (!imConfig) {
+        logger.error(`Configuration for provider ${providerId} is missing`);
+        return;
+    }
+    const appScanToJiraMapping = imConfig.appScanToJiraStatusMapping;
+
+    if (!appScanToJiraMapping || Object.keys(appScanToJiraMapping).length == 0 || !imConfig.statusIdMapping) {
+        logger.error(`No ${process.env.APPSCAN_PROVIDER} to ${providerId} status mapping found`);
+        return;
+    }
+
+    const appScanStatus = Object.keys(imConfig.appScanToJiraStatusMapping);
 
     for (let appId of appScanApplications) {
-        let issues = await getIssuesOfApplicationByStatusAndTime(appId, token, 'Noise', syncinterval);
+        let issues = await getIssuesOfApplicationByStatusAndTime(appId, token, appScanStatus, syncinterval);
         //filering out the issues which are not imported to IM and not already transitioned to the IM
         if (process.env.APPSCAN_PROVIDER == 'ASE') {
             issues = issues.filter(issue => issue['External ID'] && issue['External ID'] != '' && !alreadyTransitionedIssues.has(issue['id']));
@@ -398,18 +393,18 @@ const startStatusSyncCron = async (providerId, syncinterval) => {
     //Found 0 updated JIRA tickets in last 1m in JIRA to ASOC sync job.
     logger.info(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Found ${issuedToBeupdated.length} updated ${process.env.APPSCAN_PROVIDER} issues in last ${syncinterval}`);
     if (issuedToBeupdated.length != 0) {
-        let imConfig = await getIMConfig(providerId);
         for (let issueDetails of issuedToBeupdated) {
             try {
                 const externalId = process.env.APPSCAN_PROVIDER == 'ASE' ? issueDetails['External ID'] : issueDetails['ExternalId'];
+                const issueStatus = issueDetails['Status'] || issueDetails['status'];
                 if (externalId && externalId != '') {
                     let keyId = externalId.split('/')[4];
                     let bodyData = {
                         "transition": {
-                            "id": `${imConfig.statusIdMapping["False Positive"]}`
+                            "id": `${imConfig.statusIdMapping[appScanToJiraMapping[issueStatus]]}`
                         }
                     };
-                    await updateStatusInProvider(providerId, imConfig, bodyData, keyId, 'False Positive');
+                    await updateStatusInProvider(providerId, imConfig, bodyData, keyId, appScanToJiraMapping[issueStatus]);
                 }
             } catch (err) {
                 logger.error(err)
@@ -430,12 +425,51 @@ methods.getResults = async (req, res) => {
         return res.status(404).send(`Results for the provider ${providerId} is not found`);
 }
 
+const getPaginatedASEIssues = async (applicationId, token) => {
+    const response = { data: [] };
+    let offset = 0;
+    const limit = 100;
+    let totalItems = 0;
+
+    try {
+        do {
+            const res = await issueService.getIssuesOfApplication(applicationId, token, { 'Range': `items=${offset}-${offset + limit - 1}` });
+            response.code = res.code;
+
+            if (res.code === 200) {
+                const contentRange = res.headers['content-range'];
+                if (contentRange) {
+                    const match = contentRange.match(/items (\d+)-(\d+)\/(\d+)/);
+                    if (match) {
+                        totalItems = parseInt(match[3], 10);
+                    }
+                }
+                response.data.push(...res.data);
+                offset += limit;
+            } else {
+                logger.error(`Failed to get issues of application ${applicationId}`);
+                break;
+            }
+        } while (offset < totalItems);
+    } catch (error) {
+        logger.error(`Fetching issues of application ${applicationId} failed with error ${error}`);
+        response.code = 500;
+    }
+
+    return response;
+};
+
 const getIssuesOfApplication = async (applicationId, token) => {
     var issues = [];
     try {
-        const result = process.env.APPSCAN_PROVIDER == 'ASE' ? await issueService.getIssuesOfApplication(applicationId, token) : await fetchAllData(asocIssueService.getIssuesOfApplication, token, 200, [applicationId]);
-        if (result.code === 200) issues = result.data;
-        else logger.error(`Failed to get issues of application ${applicationId}`);
+        const result = process.env.APPSCAN_PROVIDER == 'ASE' ? await getPaginatedASEIssues(applicationId, token) : await fetchAllData(asocIssueService.getIssuesOfApplication, token, 200, [applicationId]);
+
+        if (result.code === 200) {
+            issues = result.data;
+        }
+        else {
+            logger.error(`Failed to get issues of application ${applicationId}`);
+        }
     } catch (error) {
         logger.error(`Fetching issues of application ${applicationId} failed with error ${error}`);
     }
@@ -450,6 +484,14 @@ const getIssuesOfApplicationByStatusAndTime = async (applicationId, token, statu
             const fromDateTime = parseTimeToDateTime(time, 'local');
             const toDateTime = getFormatedDate(new Date());
             result = await issueService.getIssuesOfApplicationByStatusAndTime(applicationId, token, status, fromDateTime, toDateTime);
+        }
+        else if (process.env.APPSCAN_PROVIDER == 'ASOC' && process.env.keyId.startsWith('local_')) { //A360 has a bug in the API, so we need to adjust the time
+            let fromDateTime = parseTimeToDateTime(time, 'utc');
+            const appScanTimeZone = process.env.APPSCAN_TIMEZONE; // it will be in this format 5:30
+            const [hours, minutes] = appScanTimeZone.split(':').map(Number);
+            const delayInMilliseconds = (hours * 60 + minutes) * 60000;
+            fromDateTime = new Date(new Date(fromDateTime).getTime() - delayInMilliseconds).toISOString();
+            result = await asocIssueService.getIssuesOfApplicationByStatusAndTime(applicationId, token, status, fromDateTime);
         }
         else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
             const fromDateTime = parseTimeToDateTime(time, 'utc');
@@ -587,28 +629,6 @@ const pushIssuesOfScan = async (scanId, applicationId, technology, appName, toke
     if (process.env.APPSCAN_PROVIDER == "ASOC" && !Array.isArray(appIssues)) { //ASOC returns emtpy array when no issues found
         appIssues = appIssues.Items;
     }
-    let reOpenedIssue = appIssues.filter(issue => issue['Status'] == 'Reopened');
-    reOpenedIssue.map(async res => {
-        if (process.env.APPSCAN_PROVIDER == 'ASOC') {
-            if (res.ExternalId != '') {
-                reopenedIssues.set(res.Id, res.ExternalId);
-            } else {
-                let response = await getCommentsOfIssue(res.Id, token);
-                if (response.Items && response.Items.length > 0) {
-                    response?.Items.map(a => {
-                        if (a.Comment.includes('appscan.atlassian')) {
-                            reopenedIssues.set(res.Id, a.Comment);
-                        }
-                    })
-                }
-            }
-        } else {
-            if (res['External ID'] != '' && res['External ID'] != undefined) {
-                reopenedIssues.set(res.id, res['External ID']);
-            }
-        }
-    })
-
 
     const scanIssues = process.env.APPSCAN_PROVIDER == 'ASE' ? appIssues.filter(issue => issue["Scan Name"].replaceAll("&#40;", "(").replaceAll("&#41;", ")").includes("(" + scanId + ")")) : appIssues.filter(issue => issue["ScanName"] != undefined);
     logger.info(`${appIssues.length} issues found in the scan ${scanId} and the scan is associated to the application ${applicationId}`);
@@ -618,7 +638,7 @@ const pushIssuesOfScan = async (scanId, applicationId, technology, appName, toke
     return pushedIssuesResult;
 }
 
-pushIssuesOfApplication = async (applicationId, token, providerId) => {
+const pushIssuesOfApplication = async (applicationId, token, providerId) => {
     var issues = await getIssuesOfApplication(applicationId, token);
     let applicationName = issues.applicationName != undefined ? issues.applicationName : '';
     if (process.env.APPSCAN_PROVIDER == "ASOC") {
@@ -665,7 +685,7 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
         // If it doesn't exist, create the folder
         fs.mkdirSync(folderName2);
     }
-    var imConfig = await getIMConfig(providerId);
+    var imConfig = await methods.getIMConfig(providerId);
     if (typeof imConfig === 'undefined') return;
     const filteredIssues = await igwService.filterIssues(issues, imConfig);
 
@@ -838,7 +858,7 @@ updateExternalId = async (applicationId, issueId, ticket, token) => {
         throw `Failed to update the external Id for issue ${issueId} from application ${applicationId}`;
 }
 
-const getIMConfig = async (providerId) => {
+methods.getIMConfig = async (providerId) => {
     var imConfig;
     try {
         imConfig = await imConfigService.getImConfigObject(providerId);
@@ -865,7 +885,7 @@ methods.labelsSync = async (req, res) => {
     let projectName = req.query.project;
     let providerId = req.query.providerId;
     try {
-        let imConfig = await getIMConfig(providerId);
+        let imConfig = await methods.getIMConfig(providerId);
         const result = await fetchAllSyncData(igwService.getLatestImTicketsByProject, providerId, projectName, imConfig);
 
         if (result.code == 200) {

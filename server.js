@@ -6,6 +6,7 @@ const log4js = require('log4js');
 const logger = log4js.getLogger("server");
 const constants = require('./src/utils/constants');
 const igwController = require('./src/igw/controllers/igwController');
+const imConfigService = require('./src/igw/services/imConfigService')
 
 const secure_options = {
   pfx: fs.readFileSync(process.env.SSL_PFX_CERT_FILE),
@@ -14,30 +15,32 @@ const secure_options = {
 
 startServer();
 
-if (typeof process.env.IM_PROVIDER !== 'undefined' && typeof process.env.SYNC_INTERVAL !== 'undefined') {
-  igwController.startSync(process.env.IM_PROVIDER, process.env.SYNC_INTERVAL);
-}
-if (process.env.IM_SYNC_INTERVAL !== '0m' && process.env.IM_SYNC_INTERVAL !== '0') {
-  igwController.startProviderSync(process.env.IM_PROVIDER, process.env.IM_SYNC_INTERVAL);
-}
-if (process.env.IM_JIRA_SYNC_INTERVAL !== '0m' && process.env.IM_JIRA_SYNC_INTERVAL !== '0') {
-  igwController.startStatusSync(process.env.IM_PROVIDER, process.env.IM_JIRA_SYNC_INTERVAL);
-}
-
 function startServer() {
   const SECURE_PORT = process.env.SECURE_PORT || 8443;
   let secureserver;
 
   try {
     secureserver = https.createServer(secure_options, app);
-    console.log('Secure server created successfully');
+    logger.log('Secure server created successfully');
   } catch (error) {
-    console.error('Error creating secure server:', error);
+    logger.error('Error creating secure server:', error);
     return; // Exit the function if server creation fails
   }
 
-  secureserver.listen(SECURE_PORT, () => {
-    console.log(`Secure server listening on port ${SECURE_PORT}`);
+  secureserver.listen(SECURE_PORT, async () => {
+    logger.log(`Secure server listening on port ${SECURE_PORT}`);
+    let imConfig = null;
+
+    if (typeof process.env.IM_PROVIDER !== 'undefined' && typeof process.env.SYNC_INTERVAL !== 'undefined') {
+      imConfig = await igwController.getIMConfig(process.env.IM_PROVIDER);
+      igwController.startSync(process.env.IM_PROVIDER, process.env.SYNC_INTERVAL);
+    }
+    if (process.env.IM_SYNC_INTERVAL !== '0m' && process.env.IM_SYNC_INTERVAL !== '0' && imConfig && imConfig.hasOwnProperty('jiraToAppScanStatusMapping')) {
+      igwController.startProviderSync(process.env.IM_PROVIDER, process.env.IM_SYNC_INTERVAL);
+    }
+    if (process.env.IM_JIRA_SYNC_INTERVAL !== '0m' && process.env.IM_JIRA_SYNC_INTERVAL !== '0' && imConfig && imConfig.hasOwnProperty('appScanToJiraStatusMapping')) {
+      igwController.startStatusSync(process.env.IM_PROVIDER, process.env.IM_JIRA_SYNC_INTERVAL);
+    }
   });
 
   secureserver.timeout = 18000000;

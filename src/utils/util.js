@@ -2,9 +2,9 @@ const FormData = require("form-data");
 const axios = require('axios').default;
 var methods = {};
 
-methods.httpCall = async function (method, token, url, data, etag) {
+methods.httpCall = async function (method, token, url, data, etag, headers) {
   if (process.env.APPSCAN_PROVIDER == 'ASE') {
-    const httpOptions = httpASEConfig(token, method, url, data, etag);
+    const httpOptions = httpASEConfig(token, method, url, data, etag, headers);
     return await httpASECall(httpOptions);
   } else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
     const httpOptions = httpASOCConfig(token, method, url, data, etag);
@@ -12,7 +12,7 @@ methods.httpCall = async function (method, token, url, data, etag) {
   }
 }
 
-httpASEConfig = function (token, method, url, data, etag) {
+const httpASEConfig = function (token, method, url, data, etag, headers) {
   return {
     method: method,
     url: `${process.env.ASE_URL}${url}`,
@@ -21,7 +21,8 @@ httpASEConfig = function (token, method, url, data, etag) {
       'Content-Type': 'application/json',
       'Cookie': 'asc_session_id=' + token,
       'asc_xsrf_token': token,
-      'If-Match': etag ? etag : ''
+      'If-Match': etag ? etag : '',
+      ...headers
     }
   };
 }
@@ -41,13 +42,13 @@ httpASOCConfig = function (token, method, url, data, etag) {
   };
 }
 
-httpASECall = async (config) => {
+const httpASECall = async (config) => {
   const result = await axios(config);
   if (result.headers["etag"] != 'undefined') result.data["etag"] = result.headers["etag"];
-  return { "code": result.status, "data": result.data };
+  return { "code": result.status, "data": result.data, "headers": result.headers };
 }
 
-httpASOCCall = async (config) => {
+const httpASOCCall = async (config) => {
   const result = await axios(config);
   if (result.headers["etag"] != 'undefined') result.data["etag"] = result.headers["etag"];
   return { "code": result.status, "data": result.data };

@@ -5,6 +5,8 @@ const logger = log4js.getLogger("jiraService");
 const FormData = require("form-data");
 const cryptoService = require("../../../cryptoService");
 var methods = {};
+const asocAuthService = require('../../asoc/service/authService');
+const decodeHtml = require('../../utils/decodeHtml');
 
 methods.jiraValidateToken = async (token) => {
     const url = constants.JIRA_PING_API;
@@ -20,6 +22,7 @@ methods.createTickets = async (issues, imConfigObject, applicationId, applicatio
         if (process.env.APPSCAN_PROVIDER == "ASE") {
             issues[i].ApplicationId = applicationId;
         }
+        issues[i].ApplicationName = applicationName;
         const imPayload = await createPayload(issues[i], imConfigObject, applicationId, applicationName);
         try {
             var basicToken = "Basic " + btoa(imConfigObject.imUserName + ":" + imConfigObject.imPassword);
@@ -134,6 +137,8 @@ methods.createScanTickets = async (issues, imConfigObject, applicationId, applic
     for (var i = 0; i < issues.length; i++) {
         let improjectscanKey = imConfigObject.improjectscanKey;
         imConfigObject.improjectkey = improjectscanKey;
+        issues[i].ApplicationName = applicationName;
+        issues[i].ApplicationId = applicationId;
         const imPayload = await createScanPayload(issues[i], imConfigObject, applicationId, applicationName, scanId, discoveryMethod);
         try {
             var basicToken = "Basic " + btoa(imConfigObject.imUserName + ":" + imConfigObject.imPassword);
@@ -159,173 +164,106 @@ methods.createScanTickets = async (issues, imConfigObject, applicationId, applic
 };
 
 const createPayload = async (issue, imConfigObject, applicationId, applicationName) => {
-    if (typeof imConfigObject.improjectkey == 'string') {
-        var payload = {};
-        var attrMap = {};
-        attrMap["project"] = { "key": imConfigObject.improjectkey };
-        attrMap["issuetype"] = { "name": imConfigObject.imissuetype };
-        if (process.env.APPSCAN_PROVIDER == "ASOC") {
-            attrMap["summary"] = applicationName + " - " + issue["IssueType"] + " found by AppScan";
-        } else {
-            attrMap["summary"] = "Security issue: " + issue["Issue Type"].replaceAll("&#40;", "(").replaceAll("&#41;", ")") + " found by AppScan";
-        }
-        attrMap["description"] = JSON.stringify(issue, null, 4);
-        const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
 
-        for (var i = 0; i < attributeMappings.length; i++) {
-            if (attributeMappings[i].type === 'Array') {
-                attrMap[attributeMappings[i].imAttr] = [issue[attributeMappings[i].appScanAttr] || ''];
-            }
-            else {
-                attrMap[attributeMappings[i].imAttr] = issue[attributeMappings[i].appScanAttr];
-            }
-        }
-        payload["fields"] = attrMap;
-        return payload;
+    // console.log(issue)
+
+    var payload = {};
+    var attrMap = {};
+    attrMap["project"] = { "key": imConfigObject.improjectkey[applicationId] == undefined ? imConfigObject.improjectkey['default'] : imConfigObject.improjectkey[applicationId] };
+    attrMap["issuetype"] = { "name": imConfigObject.imissuetype };
+    if (process.env.APPSCAN_PROVIDER == "ASOC") {
+        attrMap["summary"] = applicationName + " - " + issue["IssueType"] + " found by AppScan";
     } else {
-        var payload = {};
-        var attrMap = {};
-        attrMap["project"] = { "key": imConfigObject.improjectkey[applicationId] == undefined ? imConfigObject.improjectkey['default'] : imConfigObject.improjectkey[applicationId] };
-        attrMap["issuetype"] = { "name": imConfigObject.imissuetype };
-        if (process.env.APPSCAN_PROVIDER == "ASOC") {
-            attrMap["summary"] = applicationName + " - " + issue["IssueType"] + " found by AppScan";
-        } else {
-            attrMap["summary"] = issue["Issue Type"].replaceAll("&#40;", "(").replaceAll("&#41;", ")").replaceAll("&#34;", '"');
-        }
-
-
-        attrMap["description"] = JSON.stringify(issue, null, 4);
-        const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
-
-        let labelName = issue["Application Name"] != null || issue["Application Name"] != undefined ? issue["Application Name"].trim() || '' : '';
-        let labelLanguage = issue?.Language != null || issue?.Language != undefined ? issue?.Language.trim() || '' : '';
-        let labelSource = issue?.Source != null || issue?.Source != undefined ? issue?.Source.trim() || '' : '';
-        let labelSeverity = issue?.Severity != null || issue?.Severity != undefined ? issue?.Severity.trim() || '' : '';
-        let labelStatus = issue?.Status != null || issue?.Status != undefined ? issue?.Status.trim() || '' : '';
-        let labelID = issue?.id != null || issue?.id != undefined ? issue?.id.trim() || '' : '';
-        let labelLocation = issue?.Location != null || issue?.Location != undefined ? issue?.Location.trim() || '' : '';
-        let labelCreatedDate = issue["Date Created"] != null || issue["Date Created"] != undefined ? issue["Date Created"].trim() || '' : '';
-        labelName = labelName.split(/\s+/).join('_');
-        labelLanguage = labelLanguage.split(/\s+/).join('_');
-        labelSource = labelSource.split(/\s+/).join('_');
-        if (labelSeverity === "Information") {
-            labelSeverity = "Informational";
-        }
-        labelSeverity = labelSeverity
-        labelStatus = labelStatus.split(/\s+/).join('_');
-        labelID = labelID.split(/\s+/).join('_');
-        labelLocation = labelLocation.split(/\s+/).join('_');
-        const createdDate = new Date(labelCreatedDate);
-        const isoDateString = createdDate.toISOString();
-        const modifiedDateString = isoDateString.replace("Z", "");
-        labelCreatedDate = modifiedDateString + "+0000";
-        const token = await appscanLogin();
-        const appDetails = await getApplicationDetails(applicationId, token);
-        const applicationMnemonic = getApplicationMnemonic(appDetails.data);
-
-        for (var i = 0; i < attributeMappings.length; i++) {
-
-            if (attributeMappings[i].imAttr == 'labels') {
-                attrMap[attributeMappings[i].imAttr] = [labelName || '', String(applicationId)];
-            } else if (attributeMappings[i].imAttr == 'customfield_10419') {
-                attrMap[attributeMappings[i].imAttr] = String(labelName);
-            } else if (attributeMappings[i].imAttr == 'customfield_10401') {
-                attrMap[attributeMappings[i].imAttr] = {
-                    "value": "ASE - Self Service"
-                }
-            } else if (attributeMappings[i].imAttr == 'customfield_10415') {
-                attrMap[attributeMappings[i].imAttr] = String(issue["Issue Type"]);
-            } else if (attributeMappings[i].imAttr == 'customfield_10452') {
-                attrMap[attributeMappings[i].imAttr] = String(labelID);
-            } else if (attributeMappings[i].imAttr == 'customfield_10407') {
-                attrMap[attributeMappings[i].imAttr] = String(labelLocation);
-            } else if (attributeMappings[i].imAttr == 'customfield_10412') {
-                attrMap[attributeMappings[i].imAttr] = {
-                    "value": "AppScan Enterprise"
-                }
-            } else if (attributeMappings[i].imAttr == 'customfield_10406') {
-                attrMap[attributeMappings[i].imAttr] = {
-                    "value": labelSeverity
-                }
-            } else if (attributeMappings[i].imAttr == 'customfield_10507') {
-                attrMap[attributeMappings[i].imAttr] = labelCreatedDate;
-            } else if (attributeMappings[i].imAttr == 'customfield_10416') {
-                attrMap[attributeMappings[i].imAttr] = applicationMnemonic;
-            } else if (attributeMappings[i].imAttr == 'customfield_10414') {
-                attrMap[attributeMappings[i].imAttr] = {
-                    "value": "NA"
-                }
-            } else if (attributeMappings[i].imAttr == 'customfield_10404') {
-                attrMap[attributeMappings[i].imAttr] = {
-                    "value": "NA"
-                }
-            } else if (attributeMappings[i].imAttr == 'customfield_10405') {
-                attrMap[attributeMappings[i].imAttr] = "NA";
-            }
-
-
-        }
-        payload["fields"] = attrMap;
-        return payload;
+        attrMap["summary"] = "Security issue: " + decodeHtml(issue["Issue Type"]) + " found by AppScan";
     }
+    attrMap["description"] = JSON.stringify(issue, null, 4);
+    const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
+
+    for (var i = 0; i < attributeMappings.length; i++) {
+        let appScanAttrVal = attributeMappings[i].defaultAttrValue === "" ? issue[attributeMappings[i].appScanAttr] : attributeMappings[i].defaultAttrValue;
+        if (attributeMappings[i].type === 'Array') {
+            const arrayValues = [];
+            attributeMappings[i].appScanAttr.forEach((element) => {
+                const item = issue[element] ? issue[element].toString().replace(/\s+/g, '') : element.replace(/\s+/g, ''); // Jira does not accept whitespaces in the array values so removing them                    item.split(/\s+/).join(''); // Jira does not accept whiltespaces in the array values so removing them
+                arrayValues.push(item);
+            });
+            attrMap[attributeMappings[i].imAttr] = arrayValues
+        }
+        else if (attributeMappings[i].type === "Dropdown") {
+            if (appScanAttrVal) {
+                attrMap[attributeMappings[i].imAttr] = {
+                    "value": appScanAttrVal
+                }
+            }
+        }
+        else if (attributeMappings[i].type === "DateTime") {
+            const formattedDateString = new Date(appScanAttrVal || Date.now()).toISOString().replace("Z", "+0000");
+            attrMap[attributeMappings[i].imAttr] = formattedDateString;
+        }
+        else if (attributeMappings[i].type === "String") {
+            if (appScanAttrVal) {
+                attrMap[attributeMappings[i].imAttr] = String(decodeHtml(appScanAttrVal));
+            }
+        }
+    }
+    payload["fields"] = attrMap;
+
+    //Set the priority based on the severity only if the severity is present in the severity map
+    if (imConfigObject.severitymap[issue["Severity"]]) {
+        payload["fields"]["priority"] = {
+            "name": imConfigObject.severitymap[issue["Severity"]]
+        }
+    }
+    return payload;
+
 }
 
 const createScanPayload = async (issue, imConfigObject, applicationId, applicationName, scanId, discoveryMethod) => {
-    if (typeof imConfigObject.improjectkey == 'string') {
-        var payload = {};
-        var attrMap = {};
-        attrMap["project"] = { "key": imConfigObject.improjectkey };
-        attrMap["issuetype"] = { "name": imConfigObject.imissuetype };
-
-        if (process.env.APPSCAN_PROVIDER == "ASOC") {
-            attrMap["summary"] = applicationName + " - " + issue["IssueType"] + " found by AppScan";
-        } else {
-            attrMap["summary"] = "Security issue: " + issue["Issue Type"].replaceAll("&#40;", "(").replaceAll("&#41;", ")") + " found by AppScan";
-        }
-        attrMap["description"] = JSON.stringify(issue, null, 4);
-        const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
-
-        for (var i = 0; i < attributeMappings.length; i++) {
-            if (attributeMappings[i].type === 'Array') {
-                attrMap[attributeMappings[i].imAttr] = [issue[attributeMappings[i].appScanAttr] || ''];
-            }
-            else {
-                attrMap[attributeMappings[i].imAttr] = issue[attributeMappings[i].appScanAttr];
-            }
-        }
-        payload["fields"] = attrMap;
-        return payload;
+    var payload = {};
+    var attrMap = {};
+    attrMap["project"] = { "key": imConfigObject.improjectkey[applicationId] == undefined ? imConfigObject.improjectkey['default'] : imConfigObject.improjectkey[applicationId] };
+    attrMap["issuetype"] = { "name": 'Task' };
+    if (process.env.APPSCAN_PROVIDER == "ASOC") {
+        attrMap["summary"] = discoveryMethod + ' - ' + applicationName + " - " + scanId + " scanned by ASOC";
     } else {
-        var payload = {};
-        var attrMap = {};
-        attrMap["project"] = { "key": imConfigObject.improjectkey[applicationId] == undefined ? imConfigObject.improjectkey['default'] : imConfigObject.improjectkey[applicationId] };
-        attrMap["issuetype"] = { "name": imConfigObject.imissuetype };
-        attrMap["issuetype"] = { "name": 'Task' };
-        if (process.env.APPSCAN_PROVIDER == "ASOC") {
-            attrMap["summary"] = discoveryMethod + ' - ' + applicationName + " - " + scanId + " scanned by ASOC";
-        } else {
-            attrMap["summary"] = "Security issue: " + scanId + ' ' + discoveryMethod + " found by AppScan";
+        attrMap["summary"] = "Security issue: " + scanId + ' ' + discoveryMethod + " found by AppScan";
+    }
+    attrMap["description"] = JSON.stringify(issue, null, 4);
+    const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
+    let labelName = applicationName.trim();
+    labelName = labelName.split(/\s+/).join('_')
+    for (var i = 0; i < attributeMappings.length; i++) {
+        let appScanAttrVal = attributeMappings[i].defaultAttrValue === "" ? issue[attributeMappings[i].appScanAttr] : attributeMappings[i].defaultAttrValue;
+        if (attributeMappings[i].type === 'Array') {
+            const arrayValues = [];
+            attributeMappings[i].appScanAttr.forEach((element) => {
+                const item = issue[element] ? issue[element].toString().replace(/\s+/g, '') : element.replace(/\s+/g, ''); // Jira does not accept whitespaces in the array values so removing them                    item.split(/\s+/).join(''); // Jira does not accept whiltespaces in the array values so removing them
+                arrayValues.push(item);
+            });
+            attrMap[attributeMappings[i].imAttr] = arrayValues
         }
-        attrMap["description"] = JSON.stringify(issue, null, 4);
-        const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
-        let labelName = applicationName.trim();
-        labelName = labelName.split(/\s+/).join('_')
-        for (var i = 0; i < attributeMappings.length; i++) {
-            if (attributeMappings[i].type === 'Array') {
-                if (attributeMappings[i].imAttr == 'labels') {
-                    attrMap[attributeMappings[i].imAttr] = [labelName || '', applicationId];
-                } else if (attributeMappings[i].imAttr == 'customfield_11292') {
-                    attrMap[attributeMappings[i].imAttr] = `${labelName}`
+        else if (attributeMappings[i].type === "Dropdown") {
+            if (appScanAttrVal) {
+                attrMap[attributeMappings[i].imAttr] = {
+                    "value": appScanAttrVal
                 }
             }
-            else {
-                attrMap[attributeMappings[i].imAttr] = [labelName || '', applicationId];
+        }
+        else if (attributeMappings[i].type === "DateTime") {
+            const formattedDateString = new Date(appScanAttrVal || Date.now()).toISOString().replace("Z", "+0000");
+            attrMap[attributeMappings[i].imAttr] = formattedDateString;
+        }
+        else if (attributeMappings[i].type === "String") {
+            if (appScanAttrVal) {
+                attrMap[attributeMappings[i].imAttr] = String(appScanAttrVal);
             }
         }
-        payload["fields"] = attrMap;
-        return payload;
     }
+    payload["fields"] = attrMap;
+    return payload;
 }
+
+
 methods.attachIssueDataFile = async (ticket, filePath, imConfigObject) => {
     const url = imConfigObject.imurl + constants.JIRA_ATTACH_FILE.replace("{JIRAID}", ticket);
     const formData = new FormData();
@@ -342,7 +280,7 @@ methods.attachIssueDataFile = async (ticket, filePath, imConfigObject) => {
 
 methods.getMarkedTickets = async (syncInterval, imConfigObject) => {
 
-    const imStatus = Object.keys(imConfigObject.bidirectionalStatusMapping);
+    const imStatus = Object.keys(imConfigObject.jiraToAppScanStatusMapping);
     let jql = "";
     imStatus.forEach((status) => {
         jql += `(status CHANGED TO ${status} during (-${syncInterval},now()) AND status = ${status}) OR `;
@@ -360,6 +298,14 @@ methods.getMarkedTickets = async (syncInterval, imConfigObject) => {
 
 methods.getTicketsByProject = async (projectName, imConfigObject, skipValue) => {
     const url = imConfigObject.imurl + constants.JIRA_LABELS_ISSUE.replace("{PROJECTNAME}", projectName).replace("{SKIPVALUE}", skipValue)
+    let userData = imConfigObject.imUserName + ":" + imConfigObject.imPassword;
+    var basicToken = `Basic ${Buffer.from(userData).toString('base64')}`;
+    const imConfig = getConfig("GET", basicToken, url, "");
+    return await util.httpImCall(imConfig);
+}
+
+methods.getJiraStatuses = async (projectName, imConfigObject) => {
+    const url = imConfigObject.imurl + constants.JIRA_STATUS.replace("{PROJECTNAME}", projectName)
     let userData = imConfigObject.imUserName + ":" + imConfigObject.imPassword;
     var basicToken = `Basic ${Buffer.from(userData).toString('base64')}`;
     const imConfig = getConfig("GET", basicToken, url, "");
@@ -398,15 +344,24 @@ const appscanLogin = async () => {
     return token;
 }
 const getApplicationDetails = async (appId, token) => {
-    const url = constants.ASE_APPLICATION_DETAILS.replace("{APPID}", appId);
-    return await util.httpCall("GET", token, url);
+    if (process.env.APPSCAN_PROVIDER == 'ASOC') {
+        const url = constants.ASOC_APPLICATION_DETAILS.replace("{APPID}", appId);
+        return await util.httpCall("GET", token, url);
+    }
+    else {
+        const url = constants.ASE_APPLICATION_DETAILS.replace("{APPID}", appId);
+        return await util.httpCall("GET", token, url);
+    }
+
 };
 
 const getApplicationMnemonic = (data) => {
-    const attributes = data.attributeCollection.attributeArray;
-    for (const attribute of attributes) {
-        if (attribute.name === "Application Mnemonic") {
-            return attribute.value[0];
+    if (process.env.APPSCAN_PROVIDER == 'ASE') {
+        const attributes = data.attributeCollection.attributeArray;
+        for (const attribute of attributes) {
+            if (attribute.name === "Application Mnemonic") {
+                return attribute.value[0];
+            }
         }
     }
     return null;

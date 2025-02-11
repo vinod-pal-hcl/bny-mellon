@@ -7,31 +7,92 @@ const fs = require('fs')
 var methods = {};
 
 methods.getImConfigObject = async (providerId) => {
-	var imConfig = imConfigs.get(providerId);
+    var imConfig = imConfigs.get(providerId);
 
-    if (imConfig===null || typeof imConfig === 'undefined'){
-        const imFilePath = './config/'+providerId+'.json';
+    if (imConfig === null || typeof imConfig === 'undefined') {
+        const imFilePath = './config/' + providerId + '.json';
         const imProjectKeyPath = './config/projectKey.json';
         const imProjectScanKeyPath = './config/projectScanKey.json';
-        if (fs.existsSync(imFilePath)){
+        if (fs.existsSync(imFilePath)) {
             try {
-                imConfig = await fsPromise.readFile(imFilePath, 'utf8');  
+                imConfig = await fsPromise.readFile(imFilePath, 'utf8');
                 imConfig = JSON.parse(imConfig);
-                imProjectKey = await fsPromise.readFile(imProjectKeyPath, 'utf8'); 
-                imProjectScanKey = await fsPromise.readFile(imProjectScanKeyPath, 'utf8'); 
+                imProjectKey = await fsPromise.readFile(imProjectKeyPath, 'utf8');
+                imProjectScanKey = await fsPromise.readFile(imProjectScanKeyPath, 'utf8');
                 imProjectKey = JSON.parse(imProjectKey);
                 imProjectScanKey = JSON.parse(imProjectScanKey);
                 imConfig['improjectkey'] = imProjectKey;
                 imConfig['improjectscanKey'] = imProjectScanKey;
                 imConfig = JSON.stringify(imConfig, null, 2);
+                if (!methods.validateImConfig(providerId, imConfig)) {
+                    return null;
+                }
                 imConfigs.set(providerId, imConfig);
             } catch (error) {
                 logger.error(`Reading config file of ${providerId} failed with error ${error}.`);
+                return null;
             }
         }
     }
 
     return imConfig;
+};
+
+methods.validateImConfig = (providerId, imConfig) => {
+    try {
+        var imConfigObj = JSON.parse(imConfig);
+        const requiredFields = [
+            'maxissues', 'issuestates', 'issueseverities', 'imurl', 'imUserName', 'imPassword',
+            'improjectkey', 'imissuetype', 'imsummary', 'severitymap', 'attributeMappings'
+        ];
+        for (const field of requiredFields) {
+            if (!imConfigObj.hasOwnProperty(field)) {
+                logger.error(`Validation of config file of ${providerId} failed, required field '${field}' is missing. Please refer to the sample config file for the required fields.`);
+                return false;
+            }
+        }
+
+        if (!isCyclicStatusMapping(imConfigObj)) {
+            logger.error(`Validation of config file of ${providerId} failed, cyclic status mapping is not allowed.`);
+            return false;
+        }
+        else {
+            return true;
+        }
+    } catch (error) {
+        logger.error(`Validation of config file of ${providerId} failed with error ${error}.`);
+        return false;
+    }
+};
+
+/**
+ * Checks if the status mappings between AppScan and Jira are cyclic.
+ * A cyclic dependency means that a status in AppScan maps to a status in Jira,
+ * and that status in Jira maps back to the original status in AppScan, or vice versa.
+ * 
+ * @param {Object} imConfig - The configuration object containing status mappings.
+ * @returns {boolean} - Returns `true` if there is a cyclic dependency, otherwise `false`.
+ */
+const isCyclicStatusMapping = (imConfig) => {
+    const { appScanToJiraStatusMapping, jiraToAppScanStatusMapping } = imConfig;
+
+    if (!appScanToJiraStatusMapping || !jiraToAppScanStatusMapping) {
+        return false;
+    }
+
+    for (const key in appScanToJiraStatusMapping) {
+        if (jiraToAppScanStatusMapping.hasOwnProperty(appScanToJiraStatusMapping[key])) {
+            return false;
+        }
+    }
+
+    for (const key in jiraToAppScanStatusMapping) {
+        if (appScanToJiraStatusMapping.hasOwnProperty(jiraToAppScanStatusMapping[key])) {
+            return false;
+        }
+    }
+
+    return true;
 };
 
 module.exports = methods;
