@@ -31,15 +31,15 @@ function startServer() {
     logger.log(`Secure server listening on port ${SECURE_PORT}`);
     let imConfig = null;
 
-    if (typeof process.env.IM_PROVIDER !== 'undefined' && typeof process.env.SYNC_INTERVAL !== 'undefined') {
+    if (typeof process.env.IM_PROVIDER !== 'undefined' && typeof process.env.IMPORT_ISSUES_TO_IM_SYNC_INTERVAL !== 'undefined') {
       imConfig = await igwController.getIMConfig(process.env.IM_PROVIDER);
-      igwController.startSync(process.env.IM_PROVIDER, process.env.SYNC_INTERVAL);
+      igwController.startSync(process.env.IM_PROVIDER, process.env.IMPORT_ISSUES_TO_IM_SYNC_INTERVAL);
     }
-    if (process.env.IM_SYNC_INTERVAL !== '0m' && process.env.IM_SYNC_INTERVAL !== '0' && imConfig && imConfig.hasOwnProperty('jiraToAppScanStatusMapping')) {
-      igwController.startProviderSync(process.env.IM_PROVIDER, process.env.IM_SYNC_INTERVAL);
+    if (process.env.IM_TO_APPSCAN_STATUS_SYNC_INTERVAL !== '0m' && process.env.IM_TO_APPSCAN_STATUS_SYNC_INTERVAL !== '0' && imConfig && imConfig.hasOwnProperty('jiraToAppScanStatusMapping')) {
+      igwController.startProviderSync(process.env.IM_PROVIDER, process.env.IM_TO_APPSCAN_STATUS_SYNC_INTERVAL);
     }
-    if (process.env.IM_JIRA_SYNC_INTERVAL !== '0m' && process.env.IM_JIRA_SYNC_INTERVAL !== '0' && imConfig && imConfig.hasOwnProperty('appScanToJiraStatusMapping')) {
-      igwController.startStatusSync(process.env.IM_PROVIDER, process.env.IM_JIRA_SYNC_INTERVAL);
+    if (process.env.APPSCAN_TO_IM_STATUS_SYNC_INTERVAL !== '0m' && process.env.APPSCAN_TO_IM_STATUS_SYNC_INTERVAL !== '0' && imConfig && imConfig.hasOwnProperty('appScanToJiraStatusMapping')) {
+      igwController.startStatusSync(process.env.IM_PROVIDER, process.env.APPSCAN_TO_IM_STATUS_SYNC_INTERVAL);
     }
   });
 

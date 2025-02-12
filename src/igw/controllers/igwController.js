@@ -327,11 +327,11 @@ const startProviderCron = async (providerId, syncinterval) => {
             return;
         }
 
-        const completedScans = await getLatestProviderTickets(providerId, syncinterval);
+        const providerTickets = await getLatestProviderTickets(providerId, syncinterval);
 
-        if (completedScans?.total > 0) {
+        if (providerTickets?.total > 0) {
             const updatedResults = await Promise.all(
-                completedScans.issues.map(async (res) => {
+                providerTickets.issues.map(async (res) => {
                     const jiraIssueProperty = await igwService.getJiraIssueProperty(res.key, imConfig);
                     if (jiraIssueProperty && jiraIssueProperty.value && jiraIssueProperty.value.createdBy === 'appScan') {
                         let description = JSON.parse(res.fields.description);
@@ -340,9 +340,8 @@ const startProviderCron = async (providerId, syncinterval) => {
                         try {
                             const currentIssueStatus = res.fields.status.name;
                             let status = bidrectionalMapping[currentIssueStatus];
-                            let externalId = '';
                             let comment = `${status} on JIRA`;
-                            await updateIssuesOfApplication(issueId, applicationId, status, comment, externalId, token);
+                            await updateIssuesOfApplication(issueId, applicationId, status, comment, '', token);
                             logger.info(`${providerId} to ${process.env.APPSCAN_PROVIDER} sync job: Status of the ${process.env.APPSCAN_PROVIDER} issue with Id ${issueId} and application Id ${applicationId} has been changed to ${status} successfully.`);
                         } catch (error) {
                             logger.error(error)

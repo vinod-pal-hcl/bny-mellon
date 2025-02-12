@@ -40,9 +40,11 @@ methods.getScanDetails = async (scanId, technology, token) => {
 methods.updateIssuesOfApplication = async (appId, issueId, status, comment, externalId, token) => {
     const url = constants.ASOC_UPDATE_ISSUE.replace("{ISSUEID}", issueId).replace("{APPID}", appId);
     let data = {
-        "ExternalId": externalId,
         "Status": status,
         "Comment": comment
+    };
+    if (externalId) {
+        data.ExternalId = externalId;
     }
     return await util.httpCall("PUT", token, url, data);
 };

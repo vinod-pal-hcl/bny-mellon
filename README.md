@@ -26,9 +26,9 @@
      - NUMBER_OF_BACKUPS = \<Number of backups\>
      - IM_PROVIDER = \<Provider Name. Ex: JIRA\>
      - GENERATE_HTML_FILE_JIRA=\< Set this to 'true' to attach Reports in Jira\>
-     - SYNC_INTERVAL = \<Start the sync thread to push data from AppScan to Issue Management System. 1 means synchronizer runs everyday to push issues identified in the previous day. 2 means synchronizer runs once in 2 days to push issues 
+     - IMPORT_ISSUES_TO_IM_SYNC_INTERVAL = \<Start the sync thread to push data from AppScan to Issue Management System. 1 means synchronizer runs everyday to push issues identified in the previous day. 2 means synchronizer runs once in 2 days to push issues 
      identified in last 2 days. \>
-     - IM_SYNC_INTERVAL = \< Bidirectional Feature: Update Issue status in Appscan. The sync interval in minutes, hours, days. Ex. 1d means synchronizer runs everyday to update status in APPSCAN in the previous day and today. 10m means           
+     - IM_TO_APPSCAN_STATUS_SYNC_INTERVAL = \< Bidirectional Feature: Update Issue status in Appscan. The sync interval in minutes, hours, days. Ex. 1d means synchronizer runs everyday to update status in APPSCAN in the previous day and today. 10m means           
      synchronizer runs once in 10 minute to update status in APPSCAN in last 10 minute.1h means synchronizer runs once in 1hour to to update status in APPSCAN in last 1hour.\>
 5. Rename config/JIRA.json.temp to config/JIRA.json and make changes to the properties below as per your requirements.
    - maxissues =  The maximum number of issues you want to process in this job.
