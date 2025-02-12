@@ -31,17 +31,17 @@ methods.createTickets = async (issues, imConfigObject, applicationId, applicatio
             await delay(3000);
             if (result.code === 201) {
                 const imTicket = imConfigObject.imurl + "/browse/" + result.data.key;
-                //if the issue is status is Noise then update the status of corresponding Jira ticket to False Positive
-                if (issues[i].Status === "Noise") {
-                    const transitionData = {
-                        "transition": {
-                            "id": `${imConfigObject.statusIdMapping["False Positive"]}`
-                        }
-                    }
-                    await methods.updateImStatus(imConfigObject, transitionData, result.data.key);
-                    //This global set is used to keep track of the issues that are already transitioned so that we don't transition them again in the status sync job
-                    alreadyTransitionedIssues.add(issues[i].id);
-                }
+                // //if the issue is status is Noise then update the status of corresponding Jira ticket to False Positive
+                // if (issues[i].Status === "Noise") {
+                //     const transitionData = {
+                //         "transition": {
+                //             "id": `${imConfigObject.statusIdMapping["False Positive"]}`
+                //         }
+                //     }
+                //     await methods.updateImStatus(imConfigObject, transitionData, result.data.key);
+                //     //This global set is used to keep track of the issues that are already transitioned so that we don't transition them again in the status sync job
+                //     alreadyTransitionedIssues.add(issues[i].id);
+                // }
 
                 //create Jira issue property to indentify the issues created by AppScan
                 await methods.createJiraIssueProperty(imConfigObject, result.data.key);

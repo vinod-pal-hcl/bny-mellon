@@ -181,7 +181,6 @@ methods.getIssuesOfApplicationByStatusAndTime = async (appId, token, status, fro
             }
         });
         const url = constants.ASOC_ISSUES_APPLICATION_STATUS_TIME.replace("{APPID}", appId).replace("{STATUS}", statusString).replace("{DATERANGE}", formattedFromDateTime);
-        console.log(url)
         return await util.httpCall("GET", token, url);
     }
     catch (err) {

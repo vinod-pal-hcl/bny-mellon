@@ -668,7 +668,7 @@ const createImScanTickets = async (filteredIssues, imConfig, providerId, applica
         result = await igwService.createImScanTickets(filteredIssues, imConfig, providerId, applicationId, applicationName, scanId, discoveryMethod);
         if (typeof result === 'undefined' || typeof result.success === 'undefined') result = [];
     } catch (error) {
-        logger.error(`Creating tickets in the ${providerId} failed with error ${error}`);
+        logger.error(`Creating scan tickets in the ${providerId} failed with error ${error}`);
     }
     return result;
 }
@@ -738,7 +738,7 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
         const imTicket = issueObj.ticket;
         try {
             await updateExternalId(applicationId, issueId, imTicket, refreshedToken);
-
+            logger.info(`External Id updated successfully for the issueId ${issueId} in ${process.env.APPSCAN_PROVIDER}`);
         } catch (error) {
             logger.error("Could not update the external Id of the issue for a ticket " + error);
             issueObj["updateExternalIdError"] = error;
@@ -808,7 +808,7 @@ const getIssueDetails = async (applicationId, issueId, token) => {
     return issueData;
 }
 
-updateIssueAttribute = async (appId, issueId, data, token, etag) => {
+const updateIssueAttribute = async (appId, issueId, data, token, etag) => {
     var updateSuccessful = false;
     try {
         const updateResult = process.env.APPSCAN_PROVIDER == 'ASE' ? await issueService.updateIssue(issueId, data, token, etag) : await asocIssueService.updateIssue(appId, issueId, data, token, etag);
@@ -825,37 +825,42 @@ updateIssueAttribute = async (appId, issueId, data, token, etag) => {
     return updateSuccessful;
 }
 
-updateExternalId = async (applicationId, issueId, ticket, token) => {
-    await delay(3000);
-    const issueData = await getIssueDetails(applicationId, issueId, token);
-    if (typeof issueData === 'undefined') throw `Failed to fetch the details of issue ${issueId} from application ${applicationId}`;
-    var data = {};
-    if (process.env.APPSCAN_PROVIDER == 'ASE') {
-        data["lastUpdated"] = issueData.lastUpdated;
-        data["appReleaseId"] = applicationId;
-        var attributeArray = [];
-        var attribute = {};
-        var attribute1 = {};
-        attribute["name"] = "External Id";
-        attribute["value"] = [ticket];
-        attributeArray.push(attribute);
-        var attributeCollection = {};
-        attributeCollection["attributeArray"] = attributeArray;
-        data["attributeCollection"] = attributeCollection;
+const updateExternalId = async (applicationId, issueId, ticket, token) => {
+    try {
+        await delay(3000);
+        const issueData = await getIssueDetails(applicationId, issueId, token);
+        if (typeof issueData === 'undefined') throw `Failed to fetch the details of issue ${issueId} from application ${applicationId}`;
+        var data = {};
+        if (process.env.APPSCAN_PROVIDER == 'ASE') {
+            data["lastUpdated"] = issueData.lastUpdated;
+            data["appReleaseId"] = applicationId;
+            var attributeArray = [];
+            var attribute = {};
+            var attribute1 = {};
+            attribute["name"] = "External Id";
+            attribute["value"] = [ticket];
+            attributeArray.push(attribute);
+            var attributeCollection = {};
+            attributeCollection["attributeArray"] = attributeArray;
+            data["attributeCollection"] = attributeCollection;
+        }
+        else if (process.env.APPSCAN_PROVIDER == "ASOC") {
+            data["Status"] = issueData.Status == 'New' ? 'Open' : issueData.Status;
+            data["ExternalId"] = ticket;
+            data['Comment'] = ticket
+        } else {
+            attribute1["name"] = "Comments";
+            attribute1["value"] = [ticket];
+            attributeArray.push(attribute1);
+        }
+        await delay(3000);
+        const isSuccess = await updateIssueAttribute(applicationId, issueId, data, token, issueData.etag);
+        if (!isSuccess)
+            throw `Failed to update the external Id for issue ${issueId} from application ${applicationId}`;
     }
-    else if (process.env.APPSCAN_PROVIDER == "ASOC") {
-        data["Status"] = issueData.Status == 'New' ? 'Open' : issueData.Status;
-        data["ExternalId"] = ticket;
-        data['Comment'] = ticket
-    } else {
-        attribute1["name"] = "Comments";
-        attribute1["value"] = [ticket];
-        attributeArray.push(attribute1);
+    catch (error) {
+        logger.error(`Updating external Id for issue ${issueId} from application ${applicationId} failed with error ${error}`);
     }
-    await delay(3000);
-    const isSuccess = await updateIssueAttribute(applicationId, issueId, data, token, issueData.etag);
-    if (!isSuccess)
-        throw `Failed to update the external Id for issue ${issueId} from application ${applicationId}`;
 }
 
 methods.getIMConfig = async (providerId) => {

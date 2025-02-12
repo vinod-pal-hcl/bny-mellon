@@ -27,7 +27,7 @@ const httpASEConfig = function (token, method, url, data, etag, headers) {
   };
 }
 
-httpASOCConfig = function (token, method, url, data, etag) {
+const httpASOCConfig = function (token, method, url, data, etag) {
   return {
     method: method,
     url: `${process.env.ASOC_URL}${url}`,

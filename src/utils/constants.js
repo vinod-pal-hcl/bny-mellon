@@ -33,7 +33,7 @@ var constants = {
 	ASOC_APPLICATION_DETAILS: "/api/v4/Apps?%24filter=Id%20eq%20{APPID}&%24count=false",
 	ASOC_ISSUE_DETAILS: "/api/v4/Issues/{ISSUEID}",
 	ASOC_ISSUE_COMMENTS: "/api/v4/Issues/{ISSUEID}/Comments?%24top=500&%24skip=${skipValue}&%24count=true",
-	ASOC_UPDATE_ISSUE: "/api/v4/Issues/Application/{APPID}?odataFilter=Id%20eq%20{ISSUEID}&applyPolicies=All",
+	ASOC_UPDATE_ISSUE: "/api/v4/Issues/Application/{APPID}?odataFilter=Id%20eq%20{ISSUEID}&applyPolicies=None",
 	ASOC_CREATE_HTML_SCAN_ISSUE_DETAILS: "/api/v4/Reports/Security/Scan/{SCANID}",
 	ASOC_CREATE_HTML_APP_ISSUE_DETAILS: "/api/v4/Reports/Security/Application/{APPID}",
 	ASOC_REPORT_STATUS: "/api/v4/Reports?%24top=100&%24orderby=ValidUntil&%24count=true",
