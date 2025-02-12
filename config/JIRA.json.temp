@@ -8,84 +8,110 @@
     "imissuetype": "<issue type like task, bug, epic, etc.>",
     "imsummary": "Security issue: %IssueType% found by %Scanner%",
     "severitymap": {
-        "High": "<value of priority attribute in Jira. Ex: High, Low>",
-        "Medium": "<value of priority attribute in Jira>",
-        "Low": "<value of priority attribute in Jira>",
-        "Information": "<value of priority attribute in Jira>"
+        "<AppScan Serverity e.g. High, Low, Critical>":"<Jira priority e.g. New, Open, Close, In Progress>",
+        "High":"Open",
+        "Critical:"Open",
+        "Low":"In Progress"
     },
      "attributeMappings": [
         {
+            "imAttr": "<This is an attribute id from the IM>",
+            "defaultAttrValue": "<If you want to have a hardcoded value for an IM attribute then you use this field>",
+            "appScanAttr": "<This is an attribute name from AppScan>",
+            "type": "<Type of attribute. Currently we support following types: String, Array, Dropdown, DateTime>"
+        },
+        {
+            "imAttr": "customfield_10200",
+            "defaultAttrValue": "",
+            "appScanAttr": "ApplicationName",
+            "type": "String"
+        },
+        {
             "imAttr": "labels",
-            "appScanAttr": "Application Name",
+            "defaultAttrValue": "",
+            "appScanAttr": [
+                "ApplicationName",
+                "ApplicationId",
+                "testing"
+            ],
             "type": "Array"
         },
         {
-            "imAttr": "customfield_10419",
-            "appScanAttr": "Application Name",
-            "type": "string"
+            "imAttr": "customfield_10220",
+            "defaultAttrValue": "ASoC - Self Service",
+            "appScanAttr": "",
+            "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10401",
-            "appScanAttr": "Scan Type",
-            "type": "string"
+            "imAttr": "customfield_10202",
+            "defaultAttrValue": "",
+            "appScanAttr": "IssueType",
+            "type": "String"
         },
         {
-            "imAttr": "customfield_10415",
-            "appScanAttr": "Category Name",
-            "type": "string"
+            "imAttr": "customfield_10203",
+            "defaultAttrValue": "",
+            "appScanAttr": "IssueTypeId",
+            "type": "String"
         },
         {
-            "imAttr": "customfield_10452",
-            "appScanAttr": "Scan Tool Finding Id",
-            "type": "string"
+            "imAttr": "customfield_10204",
+            "defaultAttrValue": "",
+            "appScanAttr": "Location",
+            "type": "String"
         },
         {
-            "imAttr": "customfield_10407",
-            "appScanAttr": "Finding location",
-            "type": "string"
+            "imAttr": "customfield_10221",
+            "defaultAttrValue": "ASoC",
+            "appScanAttr": "",
+            "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10412",
-            "appScanAttr": "Scanning Tool",
-            "type": "string"
+            "imAttr": "customfield_10222",
+            "defaultAttrValue": "",
+            "appScanAttr": "Severity",
+            "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10406",
-            "appScanAttr": "Finding Severity",
-            "type": "string"
+            "imAttr": "customfield_10215",
+            "defaultAttrValue": "",
+            "appScanAttr": "DateCreated",
+            "type": "DateTime"
         },
         {
-            "imAttr": "customfield_10507",
-            "appScanAttr": "Detection Date",
-            "type": "string"
+            "imAttr": "customfield_10208",
+            "defaultAttrValue": "",
+            "appScanAttr": "ApplicationName",
+            "type": "String"
         },
         {
-            "imAttr": "customfield_10416",
-            "appScanAttr": "Application Mne",
-            "type": "string"
+            "imAttr": "customfield_10211",
+            "defaultAttrValue": "NA",
+            "appScanAttr": "",
+            "type": "String"
         },
         {
-            "imAttr": "customfield_10414",
-            "appScanAttr": "Finding Authentication",
-            "type": "string"
+            "imAttr": "customfield_10217",
+            "defaultAttrValue": "NA",
+            "appScanAttr": "",
+            "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10404",
-            "appScanAttr": "Remediation Guidance",
-            "type": "string"
-        },
-        {
-            "imAttr": "customfield_10405",
-            "appScanAttr": "Scan Request ID",
-            "type": "string"
+            "imAttr": "customfield_10218",
+            "defaultAttrValue": "NA",
+            "appScanAttr": "",
+            "type": "Dropdown"
         }
-        
     ],
-    "bidirectionalStatusMapping": {
-        "<Jira status>": "<AppScan status>",
-        "<Jira status>": "<AppScan status>"
+     "jiraToAppScanStatusMapping": {
+        "<Jira status>":"<AppScan status>",
+        "<Jira status>":"<AppScan status>"
     },
-    "statusIdMapping": {
+    "appScanToJiraStatusMapping": {
+        "<AppScan status>": "<Jira status>",
+        "<AppScan status>": "<Jira status>",
+    },
+    "jiraStatusIdMapping": {
         "<Jira status name>": "<Jira status id>",
         "<Jira status name>": "<Jira status id>"
     }

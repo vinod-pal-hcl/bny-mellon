@@ -35,7 +35,7 @@ methods.createTickets = async (issues, imConfigObject, applicationId, applicatio
                 // if (issues[i].Status === "Noise") {
                 //     const transitionData = {
                 //         "transition": {
-                //             "id": `${imConfigObject.statusIdMapping["False Positive"]}`
+                //             "id": `${imConfigObject.jiraStatusIdMapping["False Positive"]}`
                 //         }
                 //     }
                 //     await methods.updateImStatus(imConfigObject, transitionData, result.data.key);

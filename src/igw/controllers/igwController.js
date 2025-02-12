@@ -370,7 +370,7 @@ const startStatusSyncCron = async (providerId, syncinterval) => {
     }
     const appScanToJiraMapping = imConfig.appScanToJiraStatusMapping;
 
-    if (!appScanToJiraMapping || Object.keys(appScanToJiraMapping).length == 0 || !imConfig.statusIdMapping) {
+    if (!appScanToJiraMapping || Object.keys(appScanToJiraMapping).length == 0 || !imConfig.jiraStatusIdMapping) {
         logger.error(`No ${process.env.APPSCAN_PROVIDER} to ${providerId} status mapping found`);
         return;
     }
@@ -400,7 +400,7 @@ const startStatusSyncCron = async (providerId, syncinterval) => {
                     let keyId = externalId.split('/')[4];
                     let bodyData = {
                         "transition": {
-                            "id": `${imConfig.statusIdMapping[appScanToJiraMapping[issueStatus]]}`
+                            "id": `${imConfig.jiraStatusIdMapping[appScanToJiraMapping[issueStatus]]}`
                         }
                     };
                     await updateStatusInProvider(providerId, imConfig, bodyData, keyId, appScanToJiraMapping[issueStatus]);
