@@ -53,12 +53,11 @@ methods.validateImConfig = (providerId, imConfig) => {
         }
 
         if (!isCyclicStatusMapping(imConfigObj)) {
-            logger.error(`Validation of config file of ${providerId} failed, cyclic status mapping is not allowed.`);
             return false;
         }
-        else {
-            return true;
-        }
+
+        return true;
+
     } catch (error) {
         logger.error(`Validation of config file of ${providerId} failed with error ${error}.`);
         return false;
@@ -77,17 +76,19 @@ const isCyclicStatusMapping = (imConfig) => {
     const { appScanToJiraStatusMapping, jiraToAppScanStatusMapping } = imConfig;
 
     if (!appScanToJiraStatusMapping || !jiraToAppScanStatusMapping) {
-        return false;
+        return true;
     }
 
     for (const key in appScanToJiraStatusMapping) {
         if (jiraToAppScanStatusMapping.hasOwnProperty(appScanToJiraStatusMapping[key])) {
+            logger.error(`Validation of config file failed: cyclic status mapping detected. Please update the 'appScanToJiraStatusMapping' or 'jiraToAppScanStatusMapping' in 'JIRA.json' file to remove the cyclic dependency.`);
             return false;
         }
     }
 
     for (const key in jiraToAppScanStatusMapping) {
         if (appScanToJiraStatusMapping.hasOwnProperty(jiraToAppScanStatusMapping[key])) {
+            logger.error(`Validation of config file failed: cyclic status mapping detected. Please update the 'jiraToAppScanStatusMapping' or 'appScanToJiraStatusMapping' in 'JIRA.json' file to remove the cyclic dependency.`);
             return false;
         }
     }
