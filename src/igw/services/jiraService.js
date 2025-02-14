@@ -187,22 +187,22 @@ const createPayload = async (issue, imConfigObject, applicationId, applicationNa
                 const item = issue[element] ? issue[element].toString().replace(/\s+/g, '') : element.replace(/\s+/g, ''); // Jira does not accept whitespaces in the array values so removing them                    item.split(/\s+/).join(''); // Jira does not accept whiltespaces in the array values so removing them
                 arrayValues.push(item);
             });
-            attrMap[attributeMappings[i].imAttr] = arrayValues
+            attrMap[attributeMappings[i].imAttrId] = arrayValues
         }
         else if (attributeMappings[i].type === "Dropdown") {
             if (appScanAttrVal) {
-                attrMap[attributeMappings[i].imAttr] = {
+                attrMap[attributeMappings[i].imAttrId] = {
                     "value": appScanAttrVal
                 }
             }
         }
         else if (attributeMappings[i].type === "DateTime") {
             const formattedDateString = new Date(appScanAttrVal || Date.now()).toISOString().replace("Z", "+0000");
-            attrMap[attributeMappings[i].imAttr] = formattedDateString;
+            attrMap[attributeMappings[i].imAttrId] = formattedDateString;
         }
         else if (attributeMappings[i].type === "String") {
             if (appScanAttrVal) {
-                attrMap[attributeMappings[i].imAttr] = String(decodeHtml(appScanAttrVal));
+                attrMap[attributeMappings[i].imAttrId] = String(decodeHtml(appScanAttrVal));
             }
         }
     }
@@ -240,22 +240,22 @@ const createScanPayload = async (issue, imConfigObject, applicationId, applicati
                 const item = issue[element] ? issue[element].toString().replace(/\s+/g, '') : element.replace(/\s+/g, ''); // Jira does not accept whitespaces in the array values so removing them                    item.split(/\s+/).join(''); // Jira does not accept whiltespaces in the array values so removing them
                 arrayValues.push(item);
             });
-            attrMap[attributeMappings[i].imAttr] = arrayValues
+            attrMap[attributeMappings[i].imAttrId] = arrayValues
         }
         else if (attributeMappings[i].type === "Dropdown") {
             if (appScanAttrVal) {
-                attrMap[attributeMappings[i].imAttr] = {
+                attrMap[attributeMappings[i].imAttrId] = {
                     "value": appScanAttrVal
                 }
             }
         }
         else if (attributeMappings[i].type === "DateTime") {
             const formattedDateString = new Date(appScanAttrVal || Date.now()).toISOString().replace("Z", "+0000");
-            attrMap[attributeMappings[i].imAttr] = formattedDateString;
+            attrMap[attributeMappings[i].imAttrId] = formattedDateString;
         }
         else if (attributeMappings[i].type === "String") {
             if (appScanAttrVal) {
-                attrMap[attributeMappings[i].imAttr] = String(appScanAttrVal);
+                attrMap[attributeMappings[i].imAttrId] = String(appScanAttrVal);
             }
         }
     }
@@ -312,6 +312,34 @@ methods.getJiraStatuses = async (projectName, imConfigObject) => {
     return await util.httpImCall(imConfig);
 }
 
+methods.validateJiraFieldIds = async (imConfigObject) => {
+    try {
+        const url = imConfigObject.imurl + constants.JIRA_GET_FIELDS;
+        let userData = imConfigObject.imUserName + ":" + imConfigObject.imPassword;
+        var basicToken = `Basic ${Buffer.from(userData).toString('base64')}`;
+        const imConfig = getConfig("GET", basicToken, url, "");
+        const fieldIds = Object.values(imConfigObject.attributeMappings).map(mapping => mapping.imAttrId);
+
+        const result = await util.httpImCall(imConfig);
+
+        global.imFields = new Map(result.data.map(field => [field.id, { id: field.id, name: field.name, type: field.schema?.type }]));
+
+        const existingFieldIds = result.data.map(field => field.id);
+        const invalidFieldIds = fieldIds.filter(fieldId => !existingFieldIds.includes(fieldId));
+        if (invalidFieldIds.length > 0) {
+            logger.error(`Invalid imAttrId found in attributeMappings: ${invalidFieldIds.join(", ")}`);
+            logger.info(`Valid field IDs are: ${Array.from(global.imFields.values()).map(field => `{id: ${field.id}, name: ${field.name}}`).join(", ")}`);
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        logger.error(`Failed to validate field IDs and the error is ${JSON.stringify(error.response.data)}`);
+        return false;
+    }
+};
+
+
 const getConfig = function (method, token, url, data) {
     return {
         method: method,
@@ -327,22 +355,6 @@ const getConfig = function (method, token, url, data) {
     };
 }
 
-const appscanLogin = async () => {
-    var token;
-    try {
-        if (process.env.APPSCAN_PROVIDER == 'ASE') {
-            token = await aseLogin();
-            if (typeof token === 'undefined') logger.error(`Failed to login to the AppScan.`);
-        }
-        else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
-            token = await asocLogin();
-            if (typeof token === 'undefined') logger.error(`Failed to login to the AppScan.`);
-        }
-    } catch (error) {
-        logger.error(`Login to AppScan failed with the error ${error}`);
-    }
-    return token;
-}
 const getApplicationDetails = async (appId, token) => {
     if (process.env.APPSCAN_PROVIDER == 'ASOC') {
         const url = constants.ASOC_APPLICATION_DETAILS.replace("{APPID}", appId);
@@ -367,26 +379,6 @@ const getApplicationMnemonic = (data) => {
     return null;
 }
 
-const aseLogin = async () => {
-    var inputData = {};
-    inputData["keyId"] = process.env.keyId;
-    inputData["keySecret"] = process.env.keySecret;
-    const result = await keyLogin(inputData);
-    return result.data.sessionId;
-}
-
-const asocLogin = async () => {
-    var inputData = {};
-    inputData["keyId"] = process.env.keyId;
-    inputData["keySecret"] = process.env.keySecret;
-    const result = await asocAuthService.keyLogin(inputData);
-    return result.data.Token;
-}
-
-const keyLogin = async (inputData) => {
-    const url = constants.ASE_API_KEYLOGIN;
-    return await util.httpCall("POST", "", url, JSON.stringify(inputData));
-};
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

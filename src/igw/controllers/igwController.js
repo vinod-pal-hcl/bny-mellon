@@ -946,23 +946,23 @@ methods.labelsSync = async (req, res) => {
                                 labelStatus = labelStatus.split(/\s+/).join('_');
 
                                 for (let j = 0; j < attributeMappings.length; j++) {
-                                    if (attributeMappings[j].type === 'Array' && labelList.includes(attributeMappings[j].imAttr)) {
-                                        if (attributeMappings[j].imAttr == 'labels') {
-                                            attrMap[attributeMappings[j].imAttr] = [labelName || '', applicationId];
-                                        } else if (attributeMappings[j].imAttr == 'customfield_11292') {
-                                            attrMap[attributeMappings[j].imAttr] = `${labelName}`
-                                        } else if (attributeMappings[j].imAttr == 'customfield_13096') {
-                                            attrMap[attributeMappings[j].imAttr] = `${labelStatus}`;
-                                        } else if (attributeMappings[j].imAttr == 'customfield_13094') {
-                                            attrMap[attributeMappings[j].imAttr] = `${labelSeverity}`;
-                                        } else if (attributeMappings[j].imAttr == 'customfield_13093') {
-                                            attrMap[attributeMappings[j].imAttr] = `${labelLanguage}`;
-                                        } else if (attributeMappings[j].imAttr == 'customfield_13095') {
-                                            attrMap[attributeMappings[j].imAttr] = `${labelSource}`;
+                                    if (attributeMappings[j].type === 'Array' && labelList.includes(attributeMappings[j].imAttrId)) {
+                                        if (attributeMappings[j].imAttrId == 'labels') {
+                                            attrMap[attributeMappings[j].imAttrId] = [labelName || '', applicationId];
+                                        } else if (attributeMappings[j].imAttrId == 'customfield_11292') {
+                                            attrMap[attributeMappings[j].imAttrId] = `${labelName}`
+                                        } else if (attributeMappings[j].imAttrId == 'customfield_13096') {
+                                            attrMap[attributeMappings[j].imAttrId] = `${labelStatus}`;
+                                        } else if (attributeMappings[j].imAttrId == 'customfield_13094') {
+                                            attrMap[attributeMappings[j].imAttrId] = `${labelSeverity}`;
+                                        } else if (attributeMappings[j].imAttrId == 'customfield_13093') {
+                                            attrMap[attributeMappings[j].imAttrId] = `${labelLanguage}`;
+                                        } else if (attributeMappings[j].imAttrId == 'customfield_13095') {
+                                            attrMap[attributeMappings[j].imAttrId] = `${labelSource}`;
                                         }
                                     }
                                     // else {
-                                    //     attrMap[attributeMappings[j].imAttr] = [labelName || '', applicationId];
+                                    //     attrMap[attributeMappings[j].imAttrId] = [labelName || '', applicationId];
                                     // }
                                 }
                                 payload["fields"] = attrMap;

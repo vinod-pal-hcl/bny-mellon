@@ -75,6 +75,7 @@ var constants = {
 	JIRA_UPDATE_TRANSITION: "/rest/api/2/issue/{JIRAID}/transitions",
 	JIRA_ISSUE_PROPERTY: "/rest/api/2/issue/{JIRAID}/properties/{PROPERTY_KEY}",
 	JIRA_ISSUE_SEARCH: "/rest/api/2/search?jql=",
+	JIRA_GET_FIELDS: "/rest/api/2/field",
 
 	INVALID_ADMIN_EMAIL: "Invalid admin email",
 	INVALID_ADMIN_PASSWORD: "Invalid admin password",

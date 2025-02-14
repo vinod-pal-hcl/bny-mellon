@@ -3,6 +3,7 @@ const logger = log4js.getLogger("imConfigService");
 const global = require("../../utils/global");
 const fsPromise = require('fs').promises;
 const fs = require('fs')
+const jiraService = require("./jiraService");
 
 var methods = {};
 
@@ -24,7 +25,8 @@ methods.getImConfigObject = async (providerId) => {
                 imConfig['improjectkey'] = imProjectKey;
                 imConfig['improjectscanKey'] = imProjectScanKey;
                 imConfig = JSON.stringify(imConfig, null, 2);
-                if (!methods.validateImConfig(providerId, imConfig)) {
+                const isValidConfig = await methods.validateImConfig(providerId, imConfig);
+                if (!isValidConfig) {
                     return null;
                 }
                 imConfigs.set(providerId, imConfig);
@@ -38,7 +40,7 @@ methods.getImConfigObject = async (providerId) => {
     return imConfig;
 };
 
-methods.validateImConfig = (providerId, imConfig) => {
+methods.validateImConfig = async (providerId, imConfig) => {
     try {
         var imConfigObj = JSON.parse(imConfig);
         const requiredFields = [
@@ -50,6 +52,12 @@ methods.validateImConfig = (providerId, imConfig) => {
                 logger.error(`Validation of config file of ${providerId} failed, required field '${field}' is missing. Please refer to the sample config file for the required fields.`);
                 return false;
             }
+        }
+
+        const isFieldsCorrect = await jiraService.validateJiraFieldIds(imConfigObj);
+
+        if (!isFieldsCorrect) {
+            return false;
         }
 
         if (!isCyclicStatusMapping(imConfigObj)) {

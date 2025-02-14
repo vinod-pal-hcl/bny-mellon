@@ -15,19 +15,22 @@
     },
      "attributeMappings": [
         {
-            "imAttr": "<This is an attribute id from the IM>",
+            "imAttrId": "<This is an attribute id from the IM>",
+            "imAttrName:"<The name of the attribute from the IM>"
             "defaultAttrValue": "<If you want to have a hardcoded value for an IM attribute then you use this field>",
             "appScanAttr": "<This is an attribute name from AppScan>",
             "type": "<Type of attribute. Currently we support following types: String, Array, Dropdown, DateTime>"
         },
         {
-            "imAttr": "customfield_10200",
+            "imAttrId": "customfield_10200",
+            "imAttrName":"Application Name",
             "defaultAttrValue": "",
             "appScanAttr": "ApplicationName",
             "type": "String"
         },
         {
-            "imAttr": "labels",
+            "imAttrId": "labels",
+            "imAttrName":"Labels",
             "defaultAttrValue": "",
             "appScanAttr": [
                 "ApplicationName",
@@ -37,67 +40,77 @@
             "type": "Array"
         },
         {
-            "imAttr": "customfield_10220",
+            "imAttrId": "customfield_10220",
+            "imAttrName":"AppScan System",
             "defaultAttrValue": "ASoC - Self Service",
             "appScanAttr": "",
             "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10202",
+            "imAttrId": "customfield_10202",
+            "imAttrName":"Issue Type",
             "defaultAttrValue": "",
             "appScanAttr": "IssueType",
             "type": "String"
         },
         {
-            "imAttr": "customfield_10203",
+            "imAttrId": "customfield_10203",
+            "imAttrName":"Issue Type Id",
             "defaultAttrValue": "",
             "appScanAttr": "IssueTypeId",
             "type": "String"
         },
         {
-            "imAttr": "customfield_10204",
+            "imAttrId": "customfield_10204",
             "defaultAttrValue": "",
             "appScanAttr": "Location",
             "type": "String"
         },
         {
-            "imAttr": "customfield_10221",
+            "imAttrId": "customfield_10221",
+            "imAttrName":"Scanning Tool",
             "defaultAttrValue": "ASoC",
             "appScanAttr": "",
             "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10222",
+            "imAttrId": "customfield_10222",
+            "imAttrName":"Issue Severity",
             "defaultAttrValue": "",
             "appScanAttr": "Severity",
             "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10215",
+            "imAttrId": "customfield_10215",
+            "imAttrName":"Date Created",
             "defaultAttrValue": "",
             "appScanAttr": "DateCreated",
             "type": "DateTime"
         },
         {
-            "imAttr": "customfield_10208",
+            "imAttrId": "customfield_10208",
+            "imAttrName":"Application Name",
             "defaultAttrValue": "",
             "appScanAttr": "ApplicationName",
             "type": "String"
         },
         {
-            "imAttr": "customfield_10211",
+            "imAttrId": "customfield_10211",
+            "imAttrName":"Application Date",
             "defaultAttrValue": "NA",
             "appScanAttr": "",
             "type": "String"
         },
         {
-            "imAttr": "customfield_10217",
+            "imAttrId": "customfield_10217",
+            "imAttrName":"Application status",
             "defaultAttrValue": "NA",
             "appScanAttr": "",
             "type": "Dropdown"
         },
         {
-            "imAttr": "customfield_10218",
+            "imAttrId": "customfield_10218",
+            "imAttrName":"Application Mne",
             "defaultAttrValue": "NA",
             "appScanAttr": "",
             "type": "Dropdown"
