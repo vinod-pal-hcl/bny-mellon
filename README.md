@@ -38,7 +38,7 @@
    - imUserName = Jira Username to be used when running the job.
    - imPassword = Password for the corresponding Jira User.
    - imissuetype = Jira issue type like task, bug, epic, etc.
-   - severitymap - Edit the severitymap json as per your requirement. This will map the ASE Severity with Jira ticket priority.
+   - severityPriorityMap - Edit the severityPriorityMap json as per your requirement. This will map the ASE Severity with Jira ticket priority.
     - jiraToAppScanStatusMapping = This mapping will contain the status correspondence from JIRA to ASE. For example, "Closed":"Fixed" indicates that a status marked as "Closed" in JIRA will update the corresponding status in ASE to "Fixed".
     - jiraStatusIdMapping = This mapping contains the JIRA status and its corresponding status ID.
 6. Rename config/projectKey.json.temp to config/projectKey.json and map the ASE application ID with Jira Project Key as per your requirement.

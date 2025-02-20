@@ -97,6 +97,7 @@ methods.updateImStatus = async (imConfigObject, bodyData, projectKey) => {
         const imConfig = getConfig("POST", basicToken, imConfigObject.imurl + url, bodyData);
 
         const result = await util.httpImCall(imConfig);
+        return result;
     } catch (err) {
         logger.error(`Failed to update ticket for Project Key - ${projectKey} and the error is ${JSON.stringify(error.response.data)}`);
     }
@@ -209,9 +210,9 @@ const createPayload = async (issue, imConfigObject, applicationId, applicationNa
     payload["fields"] = attrMap;
 
     //Set the priority based on the severity only if the severity is present in the severity map
-    if (imConfigObject.severitymap[issue["Severity"]]) {
+    if (imConfigObject.severityPriorityMap[issue["Severity"]]) {
         payload["fields"]["priority"] = {
-            "name": imConfigObject.severitymap[issue["Severity"]]
+            "name": imConfigObject.severityPriorityMap[issue["Severity"]]
         }
     }
     return payload;

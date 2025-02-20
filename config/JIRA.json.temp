@@ -7,7 +7,7 @@
     "imPassword": "<encrypted password or accesstoken. To encrypt the password run the command "node .\cryptoService.js --encrypt <password>" from the base directory.>",
     "imissuetype": "<issue type like task, bug, epic, etc.>",
     "imsummary": "Security issue: %IssueType% found by %Scanner%",
-    "severitymap": {
+    "severityPriorityMap": {
         "<AppScan Serverity e.g. High, Low, Critical>":"<Jira priority e.g. New, Open, Close, In Progress>",
         "High":"Open",
         "Critical:"Open",
@@ -86,13 +86,6 @@
             "defaultAttrValue": "",
             "appScanAttr": "DateCreated",
             "type": "DateTime"
-        },
-        {
-            "imAttrId": "customfield_10208",
-            "imAttrName":"Application Name",
-            "defaultAttrValue": "",
-            "appScanAttr": "ApplicationName",
-            "type": "String"
         },
         {
             "imAttrId": "customfield_10211",

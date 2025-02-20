@@ -285,7 +285,10 @@ const startCron = async (providerId, syncinterval) => {
                     appScanApplications.add(scan.AppId);
                     const token = await appscanLoginController();
                     let appName = scan.AppName || ''
-                    if (typeof token === 'undefined') logger.error('Not a valid token')
+                    if (typeof token === 'undefined') {
+                        logger.error(`Failed to login to the ${process.env.APPSCAN_PROVIDER}. Either the token is invalid or expired. Please check credentials in .env file and try again.`);
+
+                    }
                     else {
                         const issuesData = await pushIssuesOfScan(scan.Id, scan.AppId, scan.Technology, appName, token, providerId);
                         if (typeof issuesData != 'undefined') output.push(issuesData);
@@ -358,7 +361,7 @@ const startProviderCron = async (providerId, syncinterval) => {
 const startStatusSyncCron = async (providerId, syncinterval) => {
     const token = await appscanLoginController();
     if (!token) {
-        logger.error('Not a valid token');
+        logger.error(`Failed to login to the ${process.env.APPSCAN_PROVIDER}. Either the token is invalid or expired. Please check credentials in .env file and try again.`);
         return;
     }
 
@@ -396,6 +399,10 @@ const startStatusSyncCron = async (providerId, syncinterval) => {
             try {
                 const externalId = process.env.APPSCAN_PROVIDER == 'ASE' ? issueDetails['External ID'] : issueDetails['ExternalId'];
                 const issueStatus = issueDetails['Status'] || issueDetails['status'];
+                if (!imConfig.jiraStatusIdMapping.hasOwnProperty(appScanToJiraMapping[issueStatus])) {
+                    logger.error(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Failed to update status in Jira. The status ID mapping for '${appScanToJiraMapping[issueStatus]}' is missing in the 'jiraStatusIdMapping' section of the ${providerId}.json file. Please check the configuration.`);
+                    continue;
+                }
                 if (externalId && externalId != '') {
                     let keyId = externalId.split('/')[4];
                     let bodyData = {
@@ -578,8 +585,13 @@ const updateIssuesOfApplication = async (issueId, applicationId, status, comment
 
 const updateStatusInProvider = async (providerId, imConfig, bodyData, projectKey, newStatus) => {
     try {
-        const result = await igwService.updateImStatus(providerId, imConfig, bodyData, projectKey)
-        logger.info(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Status of the ${providerId} ticket with id ${projectKey} has been changed${newStatus ? ` to ${newStatus}` : ''}.`);
+        const result = await igwService.updateImStatus(providerId, imConfig, bodyData, projectKey);
+        if (result && result.code == 200) {
+            logger.info(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Status of the ${providerId} ticket with id ${projectKey} has been changed${newStatus ? ` to ${newStatus}` : ''}.`);
+        }
+        else if (result) {
+            logger.error(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Failed to update status of the ${providerId} ticket with id ${projectKey}. Error: ${JSON.stringify(result.data)}`);
+        }
     } catch (error) {
         throw `Failed to update the status for IssueId - ${projectKey} with error as - ${error}`
     }
@@ -1036,6 +1048,9 @@ const fetchAllData = async (serviceName, appscanToken, status, value) => {
             try {
                 let resData = value && value.length > 0 ? await serviceName(appscanToken, skipValue, ...value) : await serviceName(appscanToken, skipValue);
                 if (resData.data.Count <= skipValue) {
+                    if (Object.keys(result).length == 0) {
+                        result = resData;
+                    }
                     break;
                 }
                 if (resData && Object.keys(result).length == 0 && resData.code == status && resData.data.Items.length >= 0) {
@@ -1046,7 +1061,11 @@ const fetchAllData = async (serviceName, appscanToken, status, value) => {
                 if (skipValue > 15000) break;
             }
             catch (err) {
-                logger.error(err?.response?.data.Message || err.message)
+                const errorMessage = err?.response?.data?.title || err.message;
+                const errorDetails = err?.response?.data?.errors || {};
+                logger.error(`Error fetching data: ${errorMessage}`);
+                logger.error(`Details: ${JSON.stringify(errorDetails)}`);
+                break;
             }
             skipValue += 500;
         }

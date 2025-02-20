@@ -33,7 +33,7 @@ const tokenValidation = require("../../middleware/tokenValidation");
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.post('/login', schemas.igwLogin, validationMsgs.validateRequestSchema, igwController.igwLogin);
 
 /**
@@ -53,7 +53,7 @@ router.post('/login', schemas.igwLogin, validationMsgs.validateRequestSchema, ig
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/providers', igwController.getProviders);
 
 /**
@@ -72,7 +72,7 @@ router.get('/providers', igwController.getProviders);
  *       <b>improjectkey</b> – Project name or project key in the Issue Management System to which issues are copied</BR>
  *       <b>imissuetype</b> – The type of the issue/ticket to be created in the Issue Management System.</BR>
  *       <b>imsummary</b> – The format of the summary of the tickets in the Issue Management System.</BR>
- *       <b>severitymap</b> – Severity mapping of AppScan Issues and tickets in Issue Management System.</BR>
+ *       <b>severityPriorityMap</b> – Severity mapping of AppScan Issues and tickets in Issue Management System.</BR>
  *     tags: 
  *       - igw
  *     parameters:
@@ -120,7 +120,7 @@ router.get('/providers', igwController.getProviders);
  *               imsummary:
  *                 type: string
  *                 default: "Security issue: %IssueType% found by %Scanner%"
- *               severitymap:
+ *               severityPriorityMap:
  *                 type: object
  *                 properties:
  *                   High:
@@ -144,7 +144,7 @@ router.get('/providers', igwController.getProviders);
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.post('/:providerid/config', tokenValidation.validateToken, schemas.imConfig, validationMsgs.validateRequestSchema, igwController.createConfig);
 
 /**
@@ -176,7 +176,7 @@ router.post('/:providerid/config', tokenValidation.validateToken, schemas.imConf
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/:providerid/config', tokenValidation.validateToken, schemas.providerid, validationMsgs.validateRequestSchema, igwController.getConfig);
 
 /**
@@ -210,7 +210,7 @@ router.get('/:providerid/config', tokenValidation.validateToken, schemas.provide
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/sync/start/:syncinterval', tokenValidation.validateToken, schemas.syncinterval, validationMsgs.validateRequestSchema, igwController.startSynchronizer);
 
 
@@ -238,7 +238,7 @@ router.get('/sync/start/:syncinterval', tokenValidation.validateToken, schemas.s
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/sync/stop', tokenValidation.validateToken, igwController.stopSync);
 
 /**
@@ -265,7 +265,7 @@ router.get('/sync/stop', tokenValidation.validateToken, igwController.stopSync);
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/sync/results', tokenValidation.validateToken, igwController.getResults);
 
 
@@ -298,7 +298,7 @@ router.get('/sync/results', tokenValidation.validateToken, igwController.getResu
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/sync/app/:appid', tokenValidation.validateToken, schemas.appId, validationMsgs.validateRequestSchema, igwController.pushJobForApplication);
 
 
@@ -331,7 +331,7 @@ router.get('/sync/app/:appid', tokenValidation.validateToken, schemas.appId, val
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/sync/job/:jobid', tokenValidation.validateToken, schemas.jobId, validationMsgs.validateRequestSchema, igwController.pushJobForScan);
 
 /**
@@ -365,7 +365,7 @@ router.get('/sync/job/:jobid', tokenValidation.validateToken, schemas.jobId, val
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/sync/startImSync/:syncinterval', tokenValidation.validateToken, schemas.syncIMInterval, validationMsgs.validateRequestSchema, igwController.startIMSynchronizer);
 
 /**
@@ -392,7 +392,7 @@ router.get('/sync/startImSync/:syncinterval', tokenValidation.validateToken, sch
  *         description: Invalid token or user does not exist.
  *       500:
  *         description: An unknown error has occured.
-*/ 
+*/
 router.get('/sync/stopImSync', tokenValidation.validateToken, igwController.stopProviderSync);
 
 router.get('/sync/labels', tokenValidation.validateToken, igwController.labelsSync)
