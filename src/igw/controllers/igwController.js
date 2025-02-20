@@ -586,7 +586,7 @@ const updateIssuesOfApplication = async (issueId, applicationId, status, comment
 const updateStatusInProvider = async (providerId, imConfig, bodyData, projectKey, newStatus) => {
     try {
         const result = await igwService.updateImStatus(providerId, imConfig, bodyData, projectKey);
-        if (result && result.code == 200) {
+        if (result && result.code && result.code.toString().startsWith('2')) {
             logger.info(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Status of the ${providerId} ticket with id ${projectKey} has been changed${newStatus ? ` to ${newStatus}` : ''}.`);
         }
         else if (result) {
