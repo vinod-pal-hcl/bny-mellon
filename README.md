@@ -12,7 +12,7 @@
 2.  Download the binaries from the repository.
 3.  Open the command prompt from the home directory and run the command "npm install". This installs all the required npm libraries.
 4.  Edit the file '.env' (rename .env.temp to .env) from home directory to make changes to the below properties.  
-     - ASE_URL = \<URL of the AppScan Enterprise. \>
+     - APPSCAN_URL = \<URL of the AppScan Enterprise or ASoC or A360° \>
      - keyId = \<AppScan Enterprise Key. \>
      - keySecret =  \<AppScan Enterprise Secret. \>
      - APPSCAN_PROVIDER = ASE

@@ -6,12 +6,12 @@
     "imUserName": "<username>",
     "imPassword": "<encrypted password or accesstoken. To encrypt the password run the command "node .\cryptoService.js --encrypt <password>" from the base directory.>",
     "imissuetype": "<issue type like task, bug, epic, etc.>",
-    "imsummary": "Security issue: %IssueType% found by %Scanner%",
+    "imSummary": "Security issue: %IssueType% found by %Scanner%",
     "severityPriorityMap": {
-        "<AppScan Serverity e.g. High, Low, Critical>":"<Jira priority e.g. New, Open, Close, In Progress>",
-        "High":"Open",
-        "Critical:"Open",
-        "Low":"In Progress"
+        "<AppScan Serverity e.g. High, Low, Critical>":"<Jira priority e.g. High, Medium, Low, Lowest>",
+        "High":"High",
+        "Critical:"Medium",
+        "Low":"Low"
     },
      "attributeMappings": [
         {

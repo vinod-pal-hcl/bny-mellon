@@ -32,7 +32,7 @@ methods.getCompletedScans = async (syncInterval, aseToken) => {
     var date = new Date();
     date.setDate(date.getDate() - syncInterval);
     const fDate = date.toISOString().slice(0, 10);
-    const startDate = fDate;
+    const startDate = date.toISOString();
 
     date = new Date();
     const tDate = date.toISOString().slice(0, 10);
@@ -42,9 +42,9 @@ methods.getCompletedScans = async (syncInterval, aseToken) => {
         const queryString = "LastRanBetweenFromAndTodate=" + fDate + "|" + tDate + ",JobType=1|2";
         logger.info(`Fetching scans completed between ${fDate} and ${tDate}`);
         return await aseJobService.searchJobs(queryString, aseToken);
-    } else if (process.env.APPSCAN_PROVIDER == "ASOC") {
-        const queryString = constants.ASOC_JOB_SEARCH;
-        logger.info(`Fetching scans completed between ${fDate} and ${tDate}`);
+    } else if (process.env.APPSCAN_PROVIDER == "ASoC" || process.env.APPSCAN_PROVIDER == 'A360') {
+        const queryString = constants.ASoC_JOB_SEARCH;
+        logger.info(`Fetching scans completed between ${new Date(startDate).toLocaleString()} and ${new Date(endDate).toLocaleString()}`);
         let result = await fetchAllData(asocJobService.searchJobs, aseToken, 200, [queryString]);
         result.data = result.data.Items.filter(a => a?.LatestExecution?.Status == 'Ready').filter(a => a?.LatestExecution?.ScanEndTime <= endDate && a?.LatestExecution?.ScanEndTime >= startDate);
         return result;
@@ -66,7 +66,7 @@ methods.filterIssues = async (issues, imConfig) => {
     if (issueSeveritiesArray.length > 0) filteredIssues = filteredIssues.filter(issue => issueSeveritiesArray.includes(issue["Severity"]));
     if (process.env.APPSCAN_PROVIDER == 'ASE') {
         filteredIssues = filteredIssues.filter(issue => (typeof (issue["External ID"]) === 'undefined' || issue["External ID"].length == 0));
-    } else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
+    } else if (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360') {
         filteredIssues = filteredIssues.filter(issue => (issue["ExternalId"] === null || issue["ExternalID"] == 'undefined'));
     }
 

@@ -45,7 +45,7 @@ methods.validateImConfig = async (providerId, imConfig) => {
         var imConfigObj = JSON.parse(imConfig);
         const requiredFields = [
             'maxissues', 'issuestates', 'issueseverities', 'imurl', 'imUserName', 'imPassword',
-            'improjectkey', 'imissuetype', 'imsummary', 'severityPriorityMap', 'attributeMappings'
+            'improjectkey', 'imissuetype', 'imSummary', 'severityPriorityMap', 'attributeMappings'
         ];
         for (const field of requiredFields) {
             if (!imConfigObj.hasOwnProperty(field)) {

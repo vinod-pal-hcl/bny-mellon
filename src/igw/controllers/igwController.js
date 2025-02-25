@@ -221,7 +221,7 @@ const appscanLoginController = async () => {
             token = await igwService.aseLogin();
             if (typeof token === 'undefined') logger.error(`Failed to login to the AppScan.`);
         }
-        else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
+        else if (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360') {
             token = await igwService.asocLogin();
             if (typeof token === 'undefined') logger.error(`Failed to login to the AppScan.`);
         }
@@ -280,7 +280,7 @@ const startCron = async (providerId, syncinterval) => {
         for (var i = 0; i < completedScans.length; i++) {
             const scan = completedScans[i];
 
-            if (process.env.APPSCAN_PROVIDER == 'ASOC') {
+            if (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360') {
                 if (scan.AppId) {
                     appScanApplications.add(scan.AppId);
                     const token = await appscanLoginController();
@@ -392,7 +392,7 @@ const startStatusSyncCron = async (providerId, syncinterval) => {
 
         issuedToBeupdated.push(...issues);
     }
-    //Found 0 updated JIRA tickets in last 1m in JIRA to ASOC sync job.
+    //Found 0 updated JIRA tickets in last 1m in JIRA to ASoC sync job.
     logger.info(`${process.env.APPSCAN_PROVIDER} to ${providerId} sync job: Found ${issuedToBeupdated.length} updated ${process.env.APPSCAN_PROVIDER} issues in last ${syncinterval}`);
     if (issuedToBeupdated.length != 0) {
         for (let issueDetails of issuedToBeupdated) {
@@ -491,7 +491,7 @@ const getIssuesOfApplicationByStatusAndTime = async (applicationId, token, statu
             const toDateTime = getFormatedDate(new Date());
             result = await issueService.getIssuesOfApplicationByStatusAndTime(applicationId, token, status, fromDateTime, toDateTime);
         }
-        else if (process.env.APPSCAN_PROVIDER == 'ASOC' && process.env.keyId.startsWith('local_')) { //A360 has a bug in the API, so we need to adjust the time
+        else if (process.env.APPSCAN_PROVIDER == 'A360') {
             let fromDateTime = parseTimeToDateTime(time, 'utc');
             const appScanTimeZone = process.env.APPSCAN_TIMEZONE; // it will be in this format 5:30
             const [hours, minutes] = appScanTimeZone.split(':').map(Number);
@@ -499,7 +499,7 @@ const getIssuesOfApplicationByStatusAndTime = async (applicationId, token, statu
             fromDateTime = new Date(new Date(fromDateTime).getTime() - delayInMilliseconds).toISOString();
             result = await asocIssueService.getIssuesOfApplicationByStatusAndTime(applicationId, token, status, fromDateTime);
         }
-        else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
+        else if (process.env.APPSCAN_PROVIDER == 'ASoC') {
             const fromDateTime = parseTimeToDateTime(time, 'utc');
             result = await asocIssueService.getIssuesOfApplicationByStatusAndTime(applicationId, token, status, fromDateTime);
         }
@@ -560,7 +560,7 @@ getCommentsOfIssue = async (issueId, token) => {
 getIssuesOfScan = async (scanId, applicationId, token) => {
     var issues = [];
     try {
-        const result = process.env.APPSCAN_PROVIDER == 'ASOC' ? await fetchAllData(asocIssueService.getIssuesOfScan, token, 200, [scanId]) : '';
+        const result = (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360') ? await fetchAllData(asocIssueService.getIssuesOfScan, token, 200, [scanId]) : '';
         if (result.code === 200) issues = result.data;
         else logger.error(`Failed to get issues of application ${applicationId}`);
     } catch (error) {
@@ -577,7 +577,7 @@ const updateIssuesOfApplication = async (issueId, applicationId, status, comment
             const issueData = await getIssueDetails(applicationId, issueId, token);
             etag = issueData.etag;
         }
-        const result = process.env.APPSCAN_PROVIDER == 'ASOC' ? await asocIssueService.updateIssuesOfApplication(applicationId, issueId, status, comment, externalid, token) : await issueService.updateIssuesOfApplication(applicationId, issueId, status, comment, externalid, etag, token)
+        const result = process.env.APPSCAN_PROVIDER == 'ASE' ? await issueService.updateIssuesOfApplication(applicationId, issueId, status, comment, externalid, etag, token) : await asocIssueService.updateIssuesOfApplication(applicationId, issueId, status, comment, externalid, token);
     } catch (error) {
         throw `Failed to update the status for IssueId - ${issueId} Application Id - ${applicationId} - ${error?.response?.data?.Message || error}`
     }
@@ -637,22 +637,23 @@ methods.pushJobForApplication = async (req, res) => {
 
 const pushIssuesOfScan = async (scanId, applicationId, technology, appName, token, providerId) => {
     var appIssues = process.env.APPSCAN_PROVIDER == 'ASE' ? await getIssuesOfApplication(applicationId, token) : await getIssuesOfScan(scanId, applicationId, token);
-    if (process.env.APPSCAN_PROVIDER == "ASOC" && !Array.isArray(appIssues)) { //ASOC returns emtpy array when no issues found
+    if ((process.env.APPSCAN_PROVIDER == "ASoC" || process.env.APPSCAN_PROVIDER == 'A360') && !Array.isArray(appIssues)) { //ASoC returns emtpy array when no issues found
         appIssues = appIssues.Items;
     }
 
     const scanIssues = process.env.APPSCAN_PROVIDER == 'ASE' ? appIssues.filter(issue => issue["Scan Name"].replaceAll("&#40;", "(").replaceAll("&#41;", ")").includes("(" + scanId + ")")) : appIssues.filter(issue => issue["ScanName"] != undefined);
-    logger.info(`${appIssues.length} issues found in the scan ${scanId} and the scan is associated to the application ${applicationId}`);
+    logger.info(`${scanIssues.length} issues found in the scan ${scanId} and the scan is associated to the application ${applicationId}`);
     const pushedIssuesResult = await pushIssuesToIm(providerId, scanId, applicationId, appName, scanIssues, technology, token);
     pushedIssuesResult["scanId"] = scanId;
     pushedIssuesResult["syncTime"] = new Date();
+    pushedIssuesResult["applicationId"] = applicationId;
     return pushedIssuesResult;
 }
 
 const pushIssuesOfApplication = async (applicationId, token, providerId) => {
     var issues = await getIssuesOfApplication(applicationId, token);
     let applicationName = issues.applicationName != undefined ? issues.applicationName : '';
-    if (process.env.APPSCAN_PROVIDER == "ASOC") {
+    if (process.env.APPSCAN_PROVIDER == "ASoC" || process.env.APPSCAN_PROVIDER == 'A360') {
         issues = issues?.Items && issues?.Items.length > 0 ? issues.Items : []
     }
     logger.info(`${issues.length} issues found in the application ${applicationId}`);
@@ -700,11 +701,11 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
     if (typeof imConfig === 'undefined') return;
     const filteredIssues = await igwService.filterIssues(issues, imConfig);
 
-    if (process.env.APPSCAN_PROVIDER == "ASOC" && filteredIssues.length > 0 && process.env.GENERATE_HTML_FILE_JIRA == "true") {
+    if ((process.env.APPSCAN_PROVIDER == "ASoC" || process.env.APPSCAN_PROVIDER == 'A360') && filteredIssues.length > 0 && process.env.GENERATE_HTML_FILE_JIRA == "true") {
         try {
             await asocIssueService.downloadAsocReport(providerId, applicationId, scanId, issues, token)
         } catch (err) {
-            logger.error(`Downloading ASOC Reports for ${applicationId} failed with error - ${err}`)
+            logger.error(`Downloading ASoC Reports for ${applicationId} failed with error - ${err ? err.message : err}`);
         }
     }
 
@@ -712,7 +713,7 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
     const imTicketsResult = await createImTickets(filteredIssues, imConfig, providerId, applicationId, applicationName);
     const successArray = (typeof imTicketsResult.success === 'undefined') ? [] : imTicketsResult.success;
     let count = 0
-    if (process.env.GENERATE_SCAN_HTML_FILE_JIRA == 'true' && scanId != '' && filteredIssues.length > 0 && process.env.APPSCAN_PROVIDER == 'ASOC') {
+    if (process.env.GENERATE_SCAN_HTML_FILE_JIRA == 'true' && scanId != '' && filteredIssues.length > 0 && (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360')) {
         let downloadPath = `./temp/${applicationId}.html`;
         let discoveryMethod = filteredIssues[0].DiscoveryMethod;
         let scanDetails = process.env.APPSCAN_PROVIDER == 'ASE' ? await jobService.getScanJobDetails(scanId, token) : await asocIssueService.getScanDetails(scanId, technology, token);
@@ -754,7 +755,7 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
             logger.error("Could not update the external Id of the issue for a ticket " + error);
             issueObj["updateExternalIdError"] = error;
         }
-        if (process.env.APPSCAN_PROVIDER == "ASOC") {
+        if (process.env.APPSCAN_PROVIDER == "ASoC" || process.env.APPSCAN_PROVIDER == 'A360') {
             var downloadPath = `./tempReports/${applicationId}_${issueId}.html`;
         } else if (process.env.APPSCAN_PROVIDER == "ASE") {
             var downloadPath = `./temp/${applicationId}_${issueId}.zip`;
@@ -855,7 +856,7 @@ const updateExternalId = async (applicationId, issueId, ticket, token) => {
             attributeCollection["attributeArray"] = attributeArray;
             data["attributeCollection"] = attributeCollection;
         }
-        else if (process.env.APPSCAN_PROVIDER == "ASOC") {
+        else if (process.env.APPSCAN_PROVIDER == "ASoC" || process.env.APPSCAN_PROVIDER == 'A360') {
             data["Status"] = issueData.Status == 'New' ? 'Open' : issueData.Status;
             data["ExternalId"] = ticket;
             data['Comment'] = ticket

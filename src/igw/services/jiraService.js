@@ -45,15 +45,15 @@ methods.createTickets = async (issues, imConfigObject, applicationId, applicatio
 
                 //create Jira issue property to indentify the issues created by AppScan
                 await methods.createJiraIssueProperty(imConfigObject, result.data.key);
-                process.env.APPSCAN_PROVIDER == "ASOC" ? success.push({ issueId: issues[i]["Id"], ticket: imTicket }) : success.push({ issueId: issues[i]["id"], ticket: imTicket });
+                process.env.APPSCAN_PROVIDER == "ASE" ? success.push({ issueId: issues[i]["id"], ticket: imTicket }) : success.push({ issueId: issues[i]["Id"], ticket: imTicket });
             }
             else {
-                process.env.APPSCAN_PROVIDER == "ASOC" ? failures.push({ issueId: issues[i]["Id"], errorCode: result.code, errorMsg: result.data }) : failures.push({ issueId: issues[i]["id"], errorCode: result.code, errorMsg: result.data });
-                logger.error(`Failed to create ticket for issue Id ${process.env.APPSCAN_PROVIDER == "ASOC" ? issues[i]["Id"] : issues[i]["id"]} and the error is ${JSON.stringify(result.data)}`);
+                process.env.APPSCAN_PROVIDER == "ASE" ? failures.push({ issueId: issues[i]["id"], errorCode: result.code, errorMsg: result.data }) : failures.push({ issueId: issues[i]["Id"], errorCode: result.code, errorMsg: result.data });
+                logger.error(`Failed to create ticket for issue Id ${process.env.APPSCAN_PROVIDER == "ASoC" ? issues[i]["Id"] : issues[i]["id"]} and the error is ${JSON.stringify(result.data)}`);
             }
         } catch (error) {
-            logger.error(`Failed to create ticket for issue Id ${process.env.APPSCAN_PROVIDER == "ASOC" ? issues[i]["Id"] : issues[i]["id"]} and the error is ${JSON.stringify(error.response.data)}`);
-            failures.push({ issueId: process.env.APPSCAN_PROVIDER == "ASOC" ? issues[i]["Id"] : issues[i]["id"], errorMsg: error.message });
+            logger.error(`Failed to create ticket for issue Id ${process.env.APPSCAN_PROVIDER == "ASE" ? issues[i]["id"] : issues[i]["Id"]} and the error is ${JSON.stringify(error.response.data)}`);
+            failures.push({ issueId: process.env.APPSCAN_PROVIDER == "ASE" ? issues[i]["id"] : issues[i]["Id"], errorMsg: error.message });
         }
     }
     output["success"] = success;
@@ -75,10 +75,10 @@ methods.updateTickets = async (bodyData, imConfigObject, applicationId, projectK
         const result = await util.httpImCall(imConfig);
         await delay(3000);
         if (result.code === 204) {
-            process.env.APPSCAN_PROVIDER == "ASOC" ? success.push({ ticket: imTicket, bodyData: JSON.stringify(bodyData) }) : success.push({ issueId: issues[i]["id"], ticket: imTicket });
+            process.env.APPSCAN_PROVIDER == "ASE" ? success.push({ issueId: issues[i]["id"], ticket: imTicket }) : success.push({ ticket: imTicket, bodyData: JSON.stringify(bodyData) });
         }
         else {
-            process.env.APPSCAN_PROVIDER == "ASOC" ? failures.push({ ticket: imTicket, errorCode: result.code, errorMsg: result.data }) : failures.push({ issueId: issues[i]["id"], errorCode: result.code, errorMsg: result.data });
+            process.env.APPSCAN_PROVIDER == "ASE" ? failures.push({ issueId: issues[i]["id"], errorCode: result.code, errorMsg: result.data }) : failures.push({ ticket: imTicket, errorCode: result.code, errorMsg: result.data });
             logger.error(`Failed to create ticket for Project Key -  ${projectKey} and the error is ${result.data}`);
         }
     } catch (error) {
@@ -148,10 +148,10 @@ methods.createScanTickets = async (issues, imConfigObject, applicationId, applic
             await delay(3000);
             if (result.code === 201) {
                 const imTicket = imConfigObject.imurl + "/browse/" + result.data.key;
-                process.env.APPSCAN_PROVIDER == "ASOC" ? success.push({ scanId: scanId, ticket: imTicket }) : success.push({ scanId: scanId, ticket: imTicket });
+                process.env.APPSCAN_PROVIDER == "ASE" ? success.push({ scanId: scanId, ticket: imTicket }) : success.push({ scanId: scanId, ticket: imTicket });
             }
             else {
-                process.env.APPSCAN_PROVIDER == "ASOC" ? failures.push({ scanId: scanId, errorCode: result.code, errorMsg: result.data }) : failures.push({ scanId: scanId, errorCode: result.code, errorMsg: result.data });
+                process.env.APPSCAN_PROVIDER == "ASE" ? failures.push({ scanId: scanId, errorCode: result.code, errorMsg: result.data }) : failures.push({ scanId: scanId, errorCode: result.code, errorMsg: result.data });
                 logger.error(`Failed to create ticket for scan Id ${scanId} and the error is ${JSON.stringify(result.data)}`);
             }
         } catch (error) {
@@ -164,19 +164,29 @@ methods.createScanTickets = async (issues, imConfigObject, applicationId, applic
     return output;
 };
 
+const replacePlaceholders = (template, issue) => {
+    return template.replace(/%([^%]+)%/g, (_, key) => {
+        const trimmedKey = key.trim();
+        const value = issue[trimmedKey];
+        if (value) {
+            return process.env.APPSCAN_PROVIDER === "ASE" ? decodeHtml(value) : value;
+        }
+        return `%${key}%`;
+    });
+};
+
+
 const createPayload = async (issue, imConfigObject, applicationId, applicationName) => {
 
-    // console.log(issue)
+    console.log(issue)
 
     var payload = {};
     var attrMap = {};
     attrMap["project"] = { "key": imConfigObject.improjectkey[applicationId] == undefined ? imConfigObject.improjectkey['default'] : imConfigObject.improjectkey[applicationId] };
     attrMap["issuetype"] = { "name": imConfigObject.imissuetype };
-    if (process.env.APPSCAN_PROVIDER == "ASOC") {
-        attrMap["summary"] = applicationName + " - " + issue["IssueType"] + " found by AppScan";
-    } else {
-        attrMap["summary"] = "Security issue: " + decodeHtml(issue["Issue Type"]) + " found by AppScan";
-    }
+    attrMap["summary"] = replacePlaceholders(imConfigObject.imSummary, issue);
+
+
     attrMap["description"] = JSON.stringify(issue, null, 4);
     const attributeMappings = typeof imConfigObject.attributeMappings != 'undefined' ? imConfigObject.attributeMappings : [];
 
@@ -224,9 +234,12 @@ const createScanPayload = async (issue, imConfigObject, applicationId, applicati
     var attrMap = {};
     attrMap["project"] = { "key": imConfigObject.improjectkey[applicationId] == undefined ? imConfigObject.improjectkey['default'] : imConfigObject.improjectkey[applicationId] };
     attrMap["issuetype"] = { "name": 'Task' };
-    if (process.env.APPSCAN_PROVIDER == "ASOC") {
-        attrMap["summary"] = discoveryMethod + ' - ' + applicationName + " - " + scanId + " scanned by ASOC";
-    } else {
+    if (process.env.APPSCAN_PROVIDER == "ASoC") {
+        attrMap["summary"] = discoveryMethod + ' - ' + applicationName + " - " + scanId + " scanned by ASoC";
+    } else if (process.env.APPSCAN_PROVIDER == "A360") {
+        attrMap["summary"] = discoveryMethod + ' - ' + applicationName + " - " + scanId + " scanned by A360";
+    }
+    else {
         attrMap["summary"] = "Security issue: " + scanId + ' ' + discoveryMethod + " found by AppScan";
     }
     attrMap["description"] = JSON.stringify(issue, null, 4);
@@ -357,12 +370,12 @@ const getConfig = function (method, token, url, data) {
 }
 
 const getApplicationDetails = async (appId, token) => {
-    if (process.env.APPSCAN_PROVIDER == 'ASOC') {
-        const url = constants.ASOC_APPLICATION_DETAILS.replace("{APPID}", appId);
+    if (process.env.APPSCAN_PROVIDER == 'ASE') {
+        const url = constants.ASE_APPLICATION_DETAILS.replace("{APPID}", appId);
         return await util.httpCall("GET", token, url);
     }
     else {
-        const url = constants.ASE_APPLICATION_DETAILS.replace("{APPID}", appId);
+        const url = constants.ASoC_APPLICATION_DETAILS.replace("{APPID}", appId);
         return await util.httpCall("GET", token, url);
     }
 

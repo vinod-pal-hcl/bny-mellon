@@ -6,16 +6,19 @@ methods.httpCall = async function (method, token, url, data, etag, headers) {
   if (process.env.APPSCAN_PROVIDER == 'ASE') {
     const httpOptions = httpASEConfig(token, method, url, data, etag, headers);
     return await httpASECall(httpOptions);
-  } else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
-    const httpOptions = httpASOCConfig(token, method, url, data, etag);
-    return await httpASOCCall(httpOptions);
+  } else if (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360') {
+    const httpOptions = httpASoCConfig(token, method, url, data, etag);
+    let res = await httpASoCCall(httpOptions);;
+
+    return res;
+
   }
 }
 
 const httpASEConfig = function (token, method, url, data, etag, headers) {
   return {
     method: method,
-    url: `${process.env.ASE_URL}${url}`,
+    url: `${process.env.APPSCAN_URL}${url}`,
     data: data,
     headers: {
       'Content-Type': 'application/json',
@@ -27,10 +30,10 @@ const httpASEConfig = function (token, method, url, data, etag, headers) {
   };
 }
 
-const httpASOCConfig = function (token, method, url, data, etag) {
+const httpASoCConfig = function (token, method, url, data, etag) {
   return {
     method: method,
-    url: `${process.env.ASOC_URL}${url}`,
+    url: `${process.env.APPSCAN_URL}${url}`,
     data: data,
     headers: {
       'Content-Type': 'application/json',
@@ -48,7 +51,7 @@ const httpASECall = async (config) => {
   return { "code": result.status, "data": result.data, "headers": result.headers };
 }
 
-const httpASOCCall = async (config) => {
+const httpASoCCall = async (config) => {
   const result = await axios(config);
   if (result.headers["etag"] != 'undefined') result.data["etag"] = result.headers["etag"];
   return { "code": result.status, "data": result.data };
@@ -70,8 +73,8 @@ methods.downloadFile = async (url, downloadPath, token) => {
   const writer = require("fs").createWriteStream(downloadPath);
   if (process.env.APPSCAN_PROVIDER == 'ASE') {
     var httpOptions = httpASEConfig(token, "GET", url);
-  } else if (process.env.APPSCAN_PROVIDER == 'ASOC') {
-    var httpOptions = httpASOCConfig(token, "GET", url);
+  } else if (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360') {
+    var httpOptions = httpASoCConfig(token, "GET", url);
   }
   httpOptions["responseType"] = 'stream';
   return axios(httpOptions).then(response => {

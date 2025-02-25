@@ -71,7 +71,7 @@ router.get('/providers', igwController.getProviders);
  *       <b>imPassword</b> – IM user password (encrypted) having enough rights to create and modify tickets in the Issue Management System. Run the command "node .\cryptoService.js --encrypt <password>" from the home directory to encrypt the password</BR>
  *       <b>improjectkey</b> – Project name or project key in the Issue Management System to which issues are copied</BR>
  *       <b>imissuetype</b> – The type of the issue/ticket to be created in the Issue Management System.</BR>
- *       <b>imsummary</b> – The format of the summary of the tickets in the Issue Management System.</BR>
+ *       <b>imSummary</b> – The format of the summary of the tickets in the Issue Management System.</BR>
  *       <b>severityPriorityMap</b> – Severity mapping of AppScan Issues and tickets in Issue Management System.</BR>
  *     tags: 
  *       - igw
@@ -117,7 +117,7 @@ router.get('/providers', igwController.getProviders);
  *               imissuetype:
  *                 type: string
  *                 default: Bug
- *               imsummary:
+ *               imSummary:
  *                 type: string
  *                 default: "Security issue: %IssueType% found by %Scanner%"
  *               severityPriorityMap:
