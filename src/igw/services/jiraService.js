@@ -178,7 +178,7 @@ const replacePlaceholders = (template, issue) => {
 
 const createPayload = async (issue, imConfigObject, applicationId, applicationName) => {
 
-    console.log(issue)
+    // console.log(issue)
 
     var payload = {};
     var attrMap = {};
