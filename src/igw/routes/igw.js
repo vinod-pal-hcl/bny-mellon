@@ -321,7 +321,7 @@ router.get('/sync/app/:appid', tokenValidation.validateToken, schemas.appId, val
  *         name: jobid
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
  *     responses:
  *       200:
  *         description: Ok

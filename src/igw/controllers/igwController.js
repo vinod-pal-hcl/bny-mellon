@@ -493,7 +493,15 @@ const getIssuesOfApplicationByStatusAndTime = async (applicationId, token, statu
         }
         else if (process.env.APPSCAN_PROVIDER == 'A360') {
             let fromDateTime = parseTimeToDateTime(time, 'utc');
-            const appScanTimeZone = process.env.APPSCAN_TIMEZONE; // it will be in this format 5:30
+            let appScanTimeZone = process.env.APPSCAN_TIMEZONE; // it will be in this format 5:30
+            if (!appScanTimeZone) {
+                appScanTimeZone = '0:00'; //default UTC
+            }
+            const isValidTimeZone = /^-?\d{1,2}:\d{2}$/.test(appScanTimeZone);
+            if (!isValidTimeZone) {
+                logger.error(`Invalid time zone format: ${appScanTimeZone}. Please ensure the APPSCAN_TIMEZONE environment variable is set to a valid time zone in the format +/-HH:MM, such as -5:30 or 6:45.`);
+                return issues;
+            }
             const [hours, minutes] = appScanTimeZone.split(':').map(Number);
             const delayInMilliseconds = (hours * 60 + minutes) * 60000;
             fromDateTime = new Date(new Date(fromDateTime).getTime() - delayInMilliseconds).toISOString();
@@ -645,7 +653,7 @@ const pushIssuesOfScan = async (scanId, applicationId, technology, appName, toke
     logger.info(`${scanIssues.length} issues found in the scan ${scanId} and the scan is associated to the application ${applicationId}`);
     const pushedIssuesResult = await pushIssuesToIm(providerId, scanId, applicationId, appName, scanIssues, technology, token);
     pushedIssuesResult["scanId"] = scanId;
-    pushedIssuesResult["syncTime"] = new Date();
+    pushedIssuesResult["syncTime"] = new Date().toLocaleString();
     pushedIssuesResult["applicationId"] = applicationId;
     return pushedIssuesResult;
 }
@@ -659,7 +667,7 @@ const pushIssuesOfApplication = async (applicationId, token, providerId) => {
     logger.info(`${issues.length} issues found in the application ${applicationId}`);
     const pushedIssuesResult = await pushIssuesToIm(providerId, '', applicationId, applicationName, issues, '', token);
     pushedIssuesResult["applicationId"] = applicationId;
-    pushedIssuesResult["syncTime"] = new Date();
+    pushedIssuesResult["syncTime"] = new Date().toLocaleString();
     return pushedIssuesResult;
 }
 
@@ -735,7 +743,7 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
             issueObj["attachIssueDataFileError"] = error;
         }
         imScanTicketsResult["scanId"] = scanId;
-        imScanTicketsResult["syncTime"] = new Date();
+        imScanTicketsResult["syncTime"] = new Date().toLocaleString();
         logger.info(JSON.stringify(imScanTicketsResult, null, 4));
     }
     let refreshedToken = await appscanLoginController();
