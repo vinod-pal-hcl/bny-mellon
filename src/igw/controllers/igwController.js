@@ -744,6 +744,7 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
         }
         imScanTicketsResult["scanId"] = scanId;
         imScanTicketsResult["syncTime"] = new Date().toLocaleString();
+        imScanTicketsResult["applicationId"] = applicationId;
         logger.info(JSON.stringify(imScanTicketsResult, null, 4));
     }
     let refreshedToken = await appscanLoginController();
