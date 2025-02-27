@@ -497,9 +497,9 @@ const getIssuesOfApplicationByStatusAndTime = async (applicationId, token, statu
             if (!appScanTimeZone) {
                 appScanTimeZone = '0:00'; //default UTC
             }
-            const isValidTimeZone = /^-?\d{1,2}:\d{2}$/.test(appScanTimeZone);
+            const isValidTimeZone = /^[+-]?\d{1,2}:\d{2}$/.test(appScanTimeZone);
             if (!isValidTimeZone) {
-                logger.error(`Invalid time zone format: ${appScanTimeZone}. Please ensure the APPSCAN_TIMEZONE environment variable is set to a valid time zone in the format +/-HH:MM, such as -5:30 or 6:45.`);
+                logger.error(`Invalid time zone format: ${appScanTimeZone}. Please ensure the APPSCAN_TIMEZONE environment variable is set to a valid time zone in the format +/-HH:MM, such as -5:30, +6:45, or 5:30.`);
                 return issues;
             }
             const [hours, minutes] = appScanTimeZone.split(':').map(Number);
