@@ -333,28 +333,38 @@ const startProviderCron = async (providerId, syncinterval) => {
         const providerTickets = await getLatestProviderTickets(providerId, syncinterval);
 
         if (providerTickets?.total > 0) {
-            const updatedResults = await Promise.all(
-                providerTickets.issues.map(async (res) => {
-                    const jiraIssueProperty = await igwService.getJiraIssueProperty(res.key, imConfig);
-                    if (jiraIssueProperty && jiraIssueProperty.value && jiraIssueProperty.value.createdBy === 'appScan') {
-                        let description = JSON.parse(res.fields.description);
-                        let issueId = process.env.APPSCAN_PROVIDER == 'ASE' ? description.id : description.Id;
-                        let applicationId = description.ApplicationId;
-                        try {
-                            const currentIssueStatus = res.fields.status.name;
-                            let status = bidrectionalMapping[currentIssueStatus];
-                            let comment = `${status} on JIRA`;
-                            await updateIssuesOfApplication(issueId, applicationId, status, comment, '', token);
-                            logger.info(`${providerId} to ${process.env.APPSCAN_PROVIDER} sync job: Status of the ${process.env.APPSCAN_PROVIDER} issue with Id ${issueId} and application Id ${applicationId} has been changed to ${status} successfully.`);
-                        } catch (error) {
-                            logger.error(error)
-                        }
-                    }
-                })
-            );
+            if (process.env.APPSCAN_PROVIDER === 'ASE') {
+                for (const res of providerTickets.issues) {
+                    await processImUpdate(res, imConfig, bidrectionalMapping, token, providerId);
+                }
+            } else {
+                await Promise.all(
+                    providerTickets.issues.map(async (res) => {
+                        await processImUpdate(res, imConfig, bidrectionalMapping, token, providerId);
+                    })
+                );
+            }
         }
     } catch (err) {
         logger.error(`Fetching Updated Tickets from ${providerId} Failed ${err}`)
+    }
+}
+
+const processImUpdate = async (res, imConfig, bidrectionalMapping, token, providerId) => {
+    const jiraIssueProperty = await igwService.getJiraIssueProperty(res.key, imConfig);
+    if (jiraIssueProperty && jiraIssueProperty.value && jiraIssueProperty.value.createdBy === 'appScan') {
+        let description = JSON.parse(res.fields.description);
+        let issueId = process.env.APPSCAN_PROVIDER === 'ASE' ? description.id : description.Id;
+        let applicationId = description.ApplicationId;
+        try {
+            const currentIssueStatus = res.fields.status.name;
+            let status = bidrectionalMapping[currentIssueStatus];
+            let comment = `${status} on JIRA`;
+            await updateIssuesOfApplication(issueId, applicationId, status, comment, '', token);
+            logger.info(`${providerId} to ${process.env.APPSCAN_PROVIDER} sync job: Status of the ${process.env.APPSCAN_PROVIDER} issue with Id ${issueId} and application Id ${applicationId} has been changed to ${status} successfully.`);
+        } catch (error) {
+            logger.error(error);
+        }
     }
 }
 
