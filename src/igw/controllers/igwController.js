@@ -575,7 +575,7 @@ getCommentsOfIssue = async (issueId, token) => {
     return issues;
 }
 
-getIssuesOfScan = async (scanId, applicationId, token) => {
+const getIssuesOfScan = async (scanId, applicationId, token) => {
     var issues = [];
     try {
         const result = (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360') ? await fetchAllData(asocIssueService.getIssuesOfScan, token, 200, [scanId]) : '';
@@ -732,31 +732,37 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
     const successArray = (typeof imTicketsResult.success === 'undefined') ? [] : imTicketsResult.success;
     let count = 0
     if (process.env.GENERATE_SCAN_HTML_FILE_JIRA == 'true' && scanId != '' && filteredIssues.length > 0 && (process.env.APPSCAN_PROVIDER == 'ASoC' || process.env.APPSCAN_PROVIDER == 'A360')) {
-        let downloadPath = `./temp/${applicationId}.html`;
-        let discoveryMethod = filteredIssues[0].DiscoveryMethod;
-        let scanDetails = process.env.APPSCAN_PROVIDER == 'ASE' ? await jobService.getScanJobDetails(scanId, token) : await asocIssueService.getScanDetails(scanId, technology, token);
-        if (scanDetails.code === 200 && scanDetails.data !== 'undefined')
-            scanDetails = scanDetails.data;
-        else
-            logger.error(`Fetching details of scan ${scanId} from application ${applicationId} failed with error ${scanDetails.data}`);
-
-        const imScanTicketsResult = await createImScanTickets([scanDetails], imConfig, providerId, applicationId, applicationName, scanId, discoveryMethod);
-        const successScanArray = (typeof imScanTicketsResult.success === 'undefined') ? [] : imScanTicketsResult.success;
-        let scanObj = successScanArray[0];
-        let imScanTicket = scanObj.ticket;
         try {
-            if (require("fs").existsSync(downloadPath)) {
-                await igwService.attachIssueDataFile(imScanTicket, downloadPath, imConfig, providerId);
+            let downloadPath = `./temp/${applicationId}.html`;
+            let discoveryMethod = filteredIssues[0].DiscoveryMethod;
+            let scanDetails = process.env.APPSCAN_PROVIDER == 'ASE' ? await jobService.getScanJobDetails(scanId, token) : await asocIssueService.getScanDetails(scanId, technology, token);
+            if (scanDetails.code === 200 && scanDetails.data !== 'undefined')
+                scanDetails = scanDetails.data;
+            else
+                logger.error(`Fetching details of scan ${scanId} from application ${applicationId} failed with error ${scanDetails.data}`);
+
+            const imScanTicketsResult = await createImScanTickets([scanDetails], imConfig, providerId, applicationId, applicationName, scanId, discoveryMethod);
+            const successScanArray = (typeof imScanTicketsResult.success === 'undefined') ? [] : imScanTicketsResult.success;
+            let scanObj = successScanArray[0];
+            let imScanTicket = scanObj.ticket;
+            try {
+                if (require("fs").existsSync(downloadPath)) {
+                    await igwService.attachIssueDataFile(imScanTicket, downloadPath, imConfig, providerId);
+                }
+            } catch (error) {
+                logger.error(`Attaching data file for the issueId ${scanId} to ticket ${imScanTicket} failed with an error ${error}`);
+                issueObj["attachIssueDataFileError"] = error;
             }
-        } catch (error) {
-            logger.error(`Attaching data file for the issueId ${scanId} to ticket ${imScanTicket} failed with an error ${error}`);
-            issueObj["attachIssueDataFileError"] = error;
+            imScanTicketsResult["scanId"] = scanId;
+            imScanTicketsResult["syncTime"] = new Date().toLocaleString();
+            imScanTicketsResult["applicationId"] = applicationId;
+            logger.info(JSON.stringify(imScanTicketsResult, null, 4));
         }
-        imScanTicketsResult["scanId"] = scanId;
-        imScanTicketsResult["syncTime"] = new Date().toLocaleString();
-        imScanTicketsResult["applicationId"] = applicationId;
-        logger.info(JSON.stringify(imScanTicketsResult, null, 4));
+        catch (err) {
+            logger.error(`Error in creating scan ticket ${err}`);
+        }
     }
+
     let refreshedToken = await appscanLoginController();
     for (let j = 0; j < successArray.length; j++) {
         count++;

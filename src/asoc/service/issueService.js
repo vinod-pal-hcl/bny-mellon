@@ -33,7 +33,7 @@ methods.getCommentsOfIssue = async (token, skipValue, issueId) => {
 };
 
 methods.getScanDetails = async (scanId, technology, token) => {
-    const url = technology == 'DynamicAnalyzer' ? constants.DAST_SCAN_DATA.replace("{SCANID}", scanId) : technology == 'StaticAnalyzer' ? constants.SAST_SCAN_DATA.replace("{SCANID}", scanId) : constants.SCA_SCAN_DATA.replace("{SCANID}", scanId);
+    const url = technology == 'DynamicAnalyzer' ? constants.DAST_SCAN_DATA.replace("{SCANID}", scanId) : technology == 'StaticAnalyzer' ? constants.SAST_SCAN_DATA.replace("{SCANID}", scanId) : technology == "ScaAnalyzer" ? constants.SCA_SCAN_DATA.replace("{SCANID}", scanId) : constants.IAST_SCAN_DATA.replace("{SCANID}", scanId);
     return await util.httpCall("GET", token, url);
 };
 
