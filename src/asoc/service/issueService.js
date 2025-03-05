@@ -71,8 +71,16 @@ methods.getIssueDetails = async (appId, issueId, token) => {
     return result;
 }
 
-methods.updateIssue = async (appId, issueId, data, token, eTag) => {
-    const url = constants.ASoC_UPDATE_ISSUE.replace("{ISSUEID}", issueId).replace("{APPID}", appId);
+methods.updateIssue = async (appId, issueId, data, token, eTag, scanId, isPersonalScan) => {
+    let url;
+    if (isPersonalScan) {
+        url = constants.ASoC_UPDATE_SCAN_ISSUE.replace("{SCANID}", scanId).replace("{ISSUEID}", issueId);
+    }
+    else {
+        url = constants.ASoC_UPDATE_ISSUE.replace("{ISSUEID}", issueId).replace("{APPID}", appId);
+    }
+
+
     return await util.httpCall("PUT", token, url, JSON.stringify(data), eTag);
 }
 

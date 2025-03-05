@@ -34,6 +34,7 @@ var constants = {
 	ASoC_ISSUE_DETAILS: "/api/v4/Issues/{ISSUEID}",
 	ASoC_ISSUE_COMMENTS: "/api/v4/Issues/{ISSUEID}/Comments?%24top=500&%24skip=${skipValue}&%24count=true",
 	ASoC_UPDATE_ISSUE: "/api/v4/Issues/Application/{APPID}?odataFilter=Id%20eq%20{ISSUEID}&applyPolicies=None",
+	ASoC_UPDATE_SCAN_ISSUE: "/api/v4/Issues/Scan/{SCANID}?odataFilter=Id%20eq%20{ISSUEID}&applyPolicies=None",
 	ASoC_CREATE_HTML_SCAN_ISSUE_DETAILS: "/api/v4/Reports/Security/Scan/{SCANID}",
 	ASoC_CREATE_HTML_APP_ISSUE_DETAILS: "/api/v4/Reports/Security/Application/{APPID}",
 	ASoC_REPORT_STATUS: "/api/v4/Reports?%24top=100&%24orderby=ValidUntil&%24count=true",

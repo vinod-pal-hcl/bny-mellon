@@ -290,7 +290,7 @@ const startCron = async (providerId, syncinterval) => {
 
                     }
                     else {
-                        const issuesData = await pushIssuesOfScan(scan.Id, scan.AppId, scan.Technology, appName, token, providerId);
+                        const issuesData = await pushIssuesOfScan(scan.Id, scan.AppId, scan.Technology, appName, token, providerId, scan.IsPersonal);
                         if (typeof issuesData != 'undefined') output.push(issuesData);
                     }
                 }
@@ -298,7 +298,7 @@ const startCron = async (providerId, syncinterval) => {
             } else if (process.env.APPSCAN_PROVIDER == 'ASE') {
                 if (scan.applicationId) {
                     appScanApplications.add(scan.applicationId);
-                    const issuesData = await pushIssuesOfScan(scan.id, scan.applicationId, '', scan.name, token, providerId);
+                    const issuesData = await pushIssuesOfScan(scan.id, scan.applicationId, '', scan.name, token, providerId, false);
                     if (typeof issuesData != 'undefined') output.push(issuesData);
                 }
                 else logger.info(`Scan ${scan.id} is not associated with the application. Issues of this application cannot be pushed to Issue Management System`);
@@ -628,10 +628,11 @@ methods.pushJobForScan = async (req, res) => {
     if (result.code === 200) {
         const data = result.data;
         const applicationId = process.env.APPSCAN_PROVIDER == 'ASE' ? data.applicationId : data?.Items[0]?.ApplicationId;
+        const isPersonalScan = process.env.APPSCAN_PROVIDER == 'ASE' ? false : data?.Items[0]?.IsPersonal;
         if (typeof applicationId != 'undefined') {
             var issues = await getIssuesOfApplication(applicationId, token);
             let applicationName = issues.applicationName != undefined ? issues.applicationName : '';
-            const output = await pushIssuesOfScan(scanId, applicationId, '', applicationName, token, process.env.IM_PROVIDER);
+            const output = await pushIssuesOfScan(scanId, applicationId, '', applicationName, token, process.env.IM_PROVIDER, isPersonalScan);
             logger.info(JSON.stringify(output, null, 4));
             return res.status(200).json(output);
         }
@@ -653,7 +654,7 @@ methods.pushJobForApplication = async (req, res) => {
     return res.status(200).json(output);
 }
 
-const pushIssuesOfScan = async (scanId, applicationId, technology, appName, token, providerId) => {
+const pushIssuesOfScan = async (scanId, applicationId, technology, appName, token, providerId, isPersonalScan) => {
     var appIssues = process.env.APPSCAN_PROVIDER == 'ASE' ? await getIssuesOfApplication(applicationId, token) : await getIssuesOfScan(scanId, applicationId, token);
     if ((process.env.APPSCAN_PROVIDER == "ASoC" || process.env.APPSCAN_PROVIDER == 'A360') && !Array.isArray(appIssues)) { //ASoC returns emtpy array when no issues found
         appIssues = appIssues.Items;
@@ -661,7 +662,7 @@ const pushIssuesOfScan = async (scanId, applicationId, technology, appName, toke
 
     const scanIssues = process.env.APPSCAN_PROVIDER == 'ASE' ? appIssues.filter(issue => issue["Scan Name"].replaceAll("&#40;", "(").replaceAll("&#41;", ")").includes("(" + scanId + ")")) : appIssues.filter(issue => issue["ScanName"] != undefined);
     logger.info(`${scanIssues.length} issues found in the scan ${scanId} and the scan is associated to the application ${applicationId}`);
-    const pushedIssuesResult = await pushIssuesToIm(providerId, scanId, applicationId, appName, scanIssues, technology, token);
+    const pushedIssuesResult = await pushIssuesToIm(providerId, scanId, applicationId, appName, scanIssues, technology, token, isPersonalScan);
     pushedIssuesResult["scanId"] = scanId;
     pushedIssuesResult["syncTime"] = new Date().toLocaleString();
     pushedIssuesResult["applicationId"] = applicationId;
@@ -675,7 +676,7 @@ const pushIssuesOfApplication = async (applicationId, token, providerId) => {
         issues = issues?.Items && issues?.Items.length > 0 ? issues.Items : []
     }
     logger.info(`${issues.length} issues found in the application ${applicationId}`);
-    const pushedIssuesResult = await pushIssuesToIm(providerId, '', applicationId, applicationName, issues, '', token);
+    const pushedIssuesResult = await pushIssuesToIm(providerId, '', applicationId, applicationName, issues, '', token, true);
     pushedIssuesResult["applicationId"] = applicationId;
     pushedIssuesResult["syncTime"] = new Date().toLocaleString();
     return pushedIssuesResult;
@@ -703,7 +704,7 @@ const createImScanTickets = async (filteredIssues, imConfig, providerId, applica
     return result;
 }
 
-const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName, issues, technology, token) => {
+const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName, issues, technology, token, isPersonalScan) => {
     const folderName1 = 'temp';
     const folderName2 = 'tempReports';
 
@@ -774,7 +775,7 @@ const pushIssuesToIm = async (providerId, scanId, applicationId, applicationName
         const issueId = issueObj.issueId;
         const imTicket = issueObj.ticket;
         try {
-            await updateExternalId(applicationId, issueId, imTicket, refreshedToken);
+            await updateExternalId(applicationId, issueId, imTicket, refreshedToken, scanId, isPersonalScan);
             logger.info(`External Id updated successfully for the issueId ${issueId} in ${process.env.APPSCAN_PROVIDER}`);
         } catch (error) {
             logger.error("Could not update the external Id of the issue for a ticket " + error);
@@ -845,24 +846,24 @@ const getIssueDetails = async (applicationId, issueId, token) => {
     return issueData;
 }
 
-const updateIssueAttribute = async (appId, issueId, data, token, etag) => {
+const updateIssueAttribute = async (appId, issueId, data, token, etag, scanId, isPersonalScan) => {
     var updateSuccessful = false;
     try {
-        const updateResult = process.env.APPSCAN_PROVIDER == 'ASE' ? await issueService.updateIssue(issueId, data, token, etag) : await asocIssueService.updateIssue(appId, issueId, data, token, etag);
+        const updateResult = process.env.APPSCAN_PROVIDER == 'ASE' ? await issueService.updateIssue(issueId, data, token, etag) : await asocIssueService.updateIssue(appId, issueId, data, token, etag, scanId, isPersonalScan);
         if (updateResult.code == 200 || updateResult.code == 204) {
             updateSuccessful = true;
         }
         else {
             updateSuccessful = false;
-            logger.error(`Updating attribute of issue ${issue} failed with error ${updateResult.data}`);
+            logger.error(`Updating attribute of issue ${issueId} failed with error ${updateResult.data}`);
         }
     } catch (error) {
-        logger.error(`Updating attribute of issue ${issue} failed with error ${error}`);
+        logger.error(`Updating attribute of issue ${issueId} failed with error ${error}`);
     }
     return updateSuccessful;
 }
 
-const updateExternalId = async (applicationId, issueId, ticket, token) => {
+const updateExternalId = async (applicationId, issueId, ticket, token, scanId, isPersonalScan) => {
     try {
         await delay(3000);
         const issueData = await getIssueDetails(applicationId, issueId, token);
@@ -891,7 +892,7 @@ const updateExternalId = async (applicationId, issueId, ticket, token) => {
             attributeArray.push(attribute1);
         }
         await delay(3000);
-        const isSuccess = await updateIssueAttribute(applicationId, issueId, data, token, issueData.etag);
+        const isSuccess = await updateIssueAttribute(applicationId, issueId, data, token, issueData.etag, scanId, isPersonalScan);
         if (!isSuccess)
             throw `Failed to update the external Id for issue ${issueId} from application ${applicationId}`;
     }
