@@ -19,7 +19,7 @@
             "imAttrName:"<The name of the attribute from the IM>"
             "defaultAttrValue": "<If you want to have a hardcoded value for an IM attribute then you use this field>",
             "appScanAttr": "<This is an attribute name from AppScan>",
-            "type": "<Type of attribute. Currently we support following types: String, Array, Dropdown, DateTime>"
+            "type": "<Type of Jira attribute. Currently we support following types: String, Array, Dropdown, DateTime>"
         },
         {
             "imAttrId": "customfield_10200",
